@@ -1,1 +1,1 @@
-db.subsidiary.insert({id:db.subsidiary.count()+1, name:'Planta Barranquilla', reference:'3'})
+{id:db.subsidiary.count()+1, name:'Planta Barranquilla', reference:'3'}
