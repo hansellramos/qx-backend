@@ -1,0 +1,1 @@
+DEBUG=qx-backend:* npm start
