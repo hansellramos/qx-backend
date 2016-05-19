@@ -6,6 +6,7 @@ var cookieParser = require('cookie-parser');
 var bodyParser = require('body-parser');
 
 var routes = require('./controllers/index');
+var auth = require('./controllers/token');
 var users = require('./controllers/users');
 var subsidiaries = require('./controllers/subsidiaries');
 
@@ -29,6 +30,7 @@ app.use(function(req, res, next) {
   next();
 });
 app.use('/', routes);
+app.use('/auth', auth);
 app.use('/users', users);
 app.use('/subsidiaries', subsidiaries);
 
