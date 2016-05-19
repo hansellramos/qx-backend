@@ -1,0 +1,19 @@
+{
+  "name": "qx-backend",
+  "version": "0.0.0",
+  "description": "\"Qualitrix PQP - Backend\"",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/hansellramos/qx-backend.git"
+  },
+  "author": "Qualitrix Systems Inc. <hansell.ramos@gmail.com>",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/hansellramos/qx-backend/issues"
+  },
+  "homepage": "https://github.com/hansellramos/qx-backend#readme"
+}
