@@ -47,3 +47,12 @@ exports.verify = function(token, cb){
         else{cb(true);}
     });
 }
+
+exports.authenticate = function(username, password, cb){
+    db.get().collection('user')
+        .findOne({
+            username:username,
+            password:password,
+            active:"1"
+        }, cb);
+}
