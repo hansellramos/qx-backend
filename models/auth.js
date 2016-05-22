@@ -1,36 +1,16 @@
 var db = require('../db');
+var sha1 = require('sha1');
 
-exports.verify = function (token, cb) {
-
-}
-
-exports.insert = function (user, token, cb) {
+exports.insert = function (token, cb) {
     db.get().collection('token')
-        .insert({
-            id: db.get().collection('token').count()
-            , token: token
-            , user: user
-            , iat: (new Date()).getTime()
-            , expires: (new Date()).getTime() + 3600
-            , created: (new Date()).getTime()
-            , creator: 0
-            , modified: (new Date()).getTime()
-            , modifier: 0
-            , deleted: 0
-            , deleter: 0
-        }, cb);
-}
-
-exports.refresh = function (token, cb) {
-    this.one(token, function (error, doc) {
-        db.get().collection('token')
-            .update({token: token}, doc, cb);
-    });
+        .insert(token, cb);
 }
 
 exports.one = function (token, cb) {
     db.get().collection('token')
-        .findOne({token: token}, cb);
+        .findOne({token: token},{_id:0}, function(error, doc){
+            cb(error, doc);
+        });
 }
 
 exports.delete = function (token, cb) {
@@ -41,10 +21,23 @@ exports.delete = function (token, cb) {
     });
 }
 
-exports.verify = function(token, cb){
+exports.verify = function (token, cb) {
+    this.one(token, function(error, doc){
+        if(error){cb(false)}
+        else{
+            if(doc){
+                cb(doc);
+            }else{
+                cb(false);
+            }
+        }
+    });
+}
+
+exports.refresh = function (token, cb) {
     this.one(token, function (error, doc) {
-        if(error){cb(false);}
-        else{cb(true);}
+        db.get().collection('token')
+            .update({token: token}, doc, cb);
     });
 }
 
@@ -53,6 +46,25 @@ exports.authenticate = function(username, password, cb){
         .findOne({
             username:username,
             password:password,
-            active:"1"
+            active:true
         }, cb);
+}
+
+exports.complete = function(token){
+    if(!token.user){ return null; }
+    if(!token.iat){ return null; }
+    if(!token.expires){ return null; }
+    if(!token.created){ token.created = (new Date()).getTime(); }
+    if(!token.creator){ token.creator = 0; }
+    if(!token.modified){ token.modified = (new Date()).getTime(); }
+    if(!token.modifier){ token.modifier = 0; }
+    if(!token.id){
+        if(!token.deleted){ token.deleted = false; }
+        if(!token.deleter){ token.deleter = false; }
+    }
+    return token;
+}
+
+exports.generate = function(token){
+    return sha1(JSON.stringify(token));
 }

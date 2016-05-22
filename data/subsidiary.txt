@@ -1,1 +1,1 @@
-{id:db.subsidiary.count()+1, name:'Planta Barranquilla', reference:'3'}
+{id:1, name:'Planta Barranquilla', reference:'3'}
