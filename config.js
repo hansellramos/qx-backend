@@ -8,6 +8,7 @@ module.exports = {
             authenticationIncomplete: 'Disculpenos, no ha sido posible finalizar el proceso de identificación, por favor intente nuevamente en unos momentos.',
             nonExistentToken: 'El token proporcionado no existe, por favor verifique e intente nuevamente.',
             expiredToken: 'La sessión ha expirado, por favor ingrese nuevamente a la aplicación.',
+            endedTokenSucessfully:'La sessión ha sido terminada exitosamente'
         }
     }
 }

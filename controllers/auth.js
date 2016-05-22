@@ -77,4 +77,32 @@ router.get('/:token', function(req, res, next){
     });
 });
 
+router.delete('/:token', function(req, res, next){
+    auth_model.verify(req.params.token, function(token){
+        if(token){
+            if(token.expires < (new Date()).getTime()){
+                res.status(404).json({
+                    success:false,
+                    message:config.messages.auth.expiredToken,
+                    data:{}
+                });
+            }else{
+                auth_model.delete(token.token, function(error, user){
+                    res.json({
+                        success:true,
+                        message:config.messages.auth.ses,
+                        data:{}
+                    });
+                });
+            }
+        }else{
+            res.status(404).json({
+                success:false,
+                message:config.messages.auth.nonExistentToken,
+                data:{}
+            });
+        }
+    });
+});
+
 module.exports = router;
