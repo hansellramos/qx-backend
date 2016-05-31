@@ -1,5 +1,6 @@
 var db = require('../db');
 var sha1 = require('sha1');
+var config = require('../config');
 
 exports.insert = function (token, cb) {
     db.get().collection('token')
@@ -36,6 +37,7 @@ exports.verify = function (token, cb) {
 
 exports.refresh = function (token, cb) {
     this.one(token, function (error, doc) {
+        doc.expires = (new Date()).getTime()+config.sessionTimelife;
         db.get().collection('token')
             .update({token: token}, doc, cb);
     });
