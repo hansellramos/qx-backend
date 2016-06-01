@@ -13,5 +13,12 @@ module.exports = {
             expiredToken: 'La sessión ha expirado, por favor ingrese nuevamente a la aplicación.',
             endedTokenSucessfully:'La sessión ha sido terminada exitosamente'
         }
+        , record: {
+            paramProductMissed: 'El parametro product es necesario para esta consulta.'
+        }
+        , product: {
+            paramProductInvalid: 'El parametro product es inválido.',
+            nonExistentProduct: 'El producto solicitado no existe.'
+        }
     }
 }

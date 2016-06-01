@@ -11,6 +11,7 @@ var users = require('./controllers/users');
 var subsidiaries = require('./controllers/subsidiaries');
 var stores = require('./controllers/stores');
 var product = require('./controllers/products');
+var record = require('./controllers/records');
 var external = require('./controllers/external');
 
 var app = express();
@@ -39,6 +40,7 @@ app.use('/users', users);
 app.use('/subsidiaries', subsidiaries);
 app.use('/stores', stores);
 app.use('/products', product);
+app.use('/records', record);
 app.use('/externals', external);
 
 // catch 404 and forward to error handler
