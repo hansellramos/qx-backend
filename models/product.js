@@ -13,6 +13,23 @@ exports.all = function (cb) {
                     , as: 'store'
                 }
             }
+            , {
+                $project: {
+                    _id: 1
+                    , name: 1
+                    , reference: 1
+                    , store: {
+                        _id: 1
+                        , name: 1
+                        , reference: 1
+                    }
+                    , properties: {
+                        name: 1
+                        , id: 1
+                    }
+
+                }
+            }
         ])
         .toArray(function (err, docs) {
             cb(err, docs);
@@ -21,7 +38,7 @@ exports.all = function (cb) {
 
 exports.one = function (objectId, cb) {
     db.get().collection('product')
-        .findOne({_id: new ObjectID(objectId)},{}, function(error, doc){
+        .findOne({_id: new ObjectID(objectId)}, {}, function (error, doc) {
             cb(error, doc);
         });
 }
