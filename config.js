@@ -20,5 +20,9 @@ module.exports = {
             paramProductInvalid: 'El parametro product es inválido.',
             nonExistentProduct: 'El producto solicitado no existe.'
         }
+        , certificate: {
+            paramCertificateInvalid: 'El parametro certificate es inválido.',
+            nonExistentCertificate: 'El certificado solicitado no existe.'
+        }
     }
 }
