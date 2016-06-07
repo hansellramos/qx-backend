@@ -54,7 +54,6 @@ exports.all = function (cb) {
 
                 }
             }
-            , { $limit : 50 }
             , { $sort: {id:1} }
         ])
         .toArray(function (err, docs) {
