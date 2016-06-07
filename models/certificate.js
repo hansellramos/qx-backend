@@ -54,6 +54,8 @@ exports.all = function (cb) {
 
                 }
             }
+            , { $limit : 50 }
+            , { $sort: {id:1} }
         ])
         .toArray(function (err, docs) {
             cb(err, docs);
@@ -61,8 +63,34 @@ exports.all = function (cb) {
 }
 
 exports.one = function (objectId, cb) {
-    db.get().collection('certificate')
-        .findOne({_id: new ObjectID(objectId)}, {}, function (error, doc) {
-            cb(error, doc);
+    db.get()
+        .collection('certificate').aggregate([
+            {
+                $lookup: {
+                    from: 'product'
+                    , localField: 'product'
+                    , foreignField: 'id'
+                    , as: 'product'
+                }
+            }
+            , {
+                $lookup: {
+                    from: 'external'
+                    , localField: 'customer'
+                    , foreignField: 'id'
+                    , as: 'customer'
+                }
+            }
+            , {
+                $lookup: {
+                    from: 'user'
+                    , localField: 'creator'
+                    , foreignField: 'id'
+                    , as: 'creator'
+                }
+            }, { $limit : 50 }
+        ])
+        .toArray(function (err, docs) {
+            cb(err, docs.length > 0 ? docs[0] : docs);
         });
 }
