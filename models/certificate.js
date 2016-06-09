@@ -125,10 +125,14 @@ exports.one = function (objectId, cb) {
                     _id:1, id:1, username:1, firstname:1, lastname:1
                 },
                 modified: 1,
-                deleter: 1,
+                deleter: {
+                    _id:1, id:1, username:1, firstname:1, lastname:1
+                },
                 deleted: 1,
             }
           }
+        , { $match: {_id: new ObjectID(objectId)} }
+        , { $limit: 1 }
         ])
         .toArray(function (err, docs) {
             cb(err, docs.length > 0 ? docs[0] : docs);
