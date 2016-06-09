@@ -33,7 +33,6 @@ exports.all = function (cb) {
                 $project: {
                     _id: 1
                     , id: 1
-                    , created: 1
                     , quantity: 1
                     , presentation: 1
                     , remission: 1
@@ -43,18 +42,15 @@ exports.all = function (cb) {
                         , reference: 1
                     }
                     , customer: {
-                        _id: 1
-                        , name: 1
+                        _id: 1, name: 1
                     }
                     , creator: {
-                        _id: 1
-                        , firstname: 1
-                        , lastname: 1
-                    }
-
+                        _id: 1, firstname: 1, lastname: 1
+                    }, created: 1
                 }
             }
-            , { $sort: {id:1} }
+            , { $sort: {_id:-1} }
+            , { $limit : 50 }
         ])
         .toArray(function (err, docs) {
             cb(err, docs);
@@ -87,7 +83,52 @@ exports.one = function (objectId, cb) {
                     , foreignField: 'id'
                     , as: 'creator'
                 }
-            }, { $limit : 50 }
+            }
+            , {
+                $lookup: {
+                    from: 'user'
+                    , localField: 'modifier'
+                    , foreignField: 'id'
+                    , as: 'modifier'
+                }
+            }
+            , {
+                $lookup: {
+                    from: 'user'
+                    , localField: 'deleter'
+                    , foreignField: 'id'
+                    , as: 'deleter'
+                }
+            }
+        , {
+            $project: {
+                id: 1,
+                quantity: 1,
+                presentation: 1,
+                remission: 1,
+                date: 1,
+                active: 1,
+                clause: 1,
+                product: {
+                    _id: 1, id: 1, name: 1, reference: 1
+                },
+                customer: {
+                    _id: 1, id: 1, name: 1
+                },
+                properties: 1,
+                values: 1,
+                creator: {
+                    _id:1, id:1, username:1, firstname:1, lastname:1
+                },
+                created: 1,
+                modifier: {
+                    _id:1, id:1, username:1, firstname:1, lastname:1
+                },
+                modified: 1,
+                deleter: 1,
+                deleted: 1,
+            }
+          }
         ])
         .toArray(function (err, docs) {
             cb(err, docs.length > 0 ? docs[0] : docs);
