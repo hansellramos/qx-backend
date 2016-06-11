@@ -13,6 +13,10 @@ module.exports = {
             expiredToken: 'La sessión ha expirado, por favor ingrese nuevamente a la aplicación.',
             endedTokenSucessfully:'La sessión ha sido terminada exitosamente'
         }
+        , subsidiary: {
+            notSaved: 'No se ha podido completar la operación por problemas con la información, por favor verifica e intenta nuevamente.',
+            referenceExists: 'La referencia proporcionada ya existe y no puede duplicarse.'
+        }
         , record: {
             paramProductMissed: 'El parametro product es necesario para esta consulta.'
         }
