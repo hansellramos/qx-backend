@@ -50,7 +50,7 @@ exports.all = function (cb) {
                 }
             }
             , { $sort: {_id:-1} }
-            , { $limit : 50 }
+            /*, { $limit : 50 }*/
         ])
         .toArray(function (err, docs) {
             cb(err, docs);
@@ -100,7 +100,7 @@ exports.one = function (objectId, cb) {
                     , as: 'deleter'
                 }
             }
-        , {
+        /*, {
             $project: {
                 id: 1,
                 quantity: 1,
@@ -131,7 +131,7 @@ exports.one = function (objectId, cb) {
                 deleted: 1,
             }
           }
-        , { $match: {_id: new ObjectID(objectId)} }
+        */, { $match: {_id: new ObjectID(objectId)} }
         , { $limit: 1 }
         ])
         .toArray(function (err, docs) {
