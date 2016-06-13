@@ -37,6 +37,7 @@ router.get('/:token', function (req, res, next) {
 router.post('/:token', function (req, res, next) {
     auth_model.verify(req.params.token, function(valid){
         if(valid){
+            var currentUser = valid.user;
             auth_model.refresh(req.params.token, function(){
                 var data = req.body;
                 subsidiary_model.exists(data.reference, function(error, docs){
@@ -48,19 +49,36 @@ router.post('/:token', function (req, res, next) {
                         });
                     }
                     else {
-                        console.log({docs:docs});
                         if(docs.length>0){ //exists, don't create new
                             res.status(406).json({
                                 success:false,
                                 message:config.messages.subsidiary.notSaved,
                                 data:{
                                     fields: {
-                                        reference: config.messages.subsidiary.referenceExists
+                                        reference: {
+                                            error: true,
+                                            message: config.messages.subsidiary.referenceExists,
+                                            value: data.reference
+                                        }
                                     }
                                 }
                             });
                         }else{
-                            res.json({});
+                            subsidiary_model.add(data, currentUser, function(error){
+                                if(error){
+                                    res.status(503).json({
+                                        success:false,
+                                        message:config.messages.general.error_500+error,
+                                        data:{}
+                                    });
+                                }else{
+                                    res.json({
+                                        success: true,
+                                        message: config.messages.subsidiary.addedSuccessfully,
+                                        data:{}
+                                    });
+                                }
+                            });
                         }
                     }
                 });
