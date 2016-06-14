@@ -37,5 +37,17 @@ module.exports = {
             paramProfileInvalid: 'El parámetro :profile es inválido.',
             nonExistentProfile: 'El perfil solicitado no existe.'
         }
+        , external: {
+            paramExternalInvalid: 'El parámetro :external es inválido.',
+            nonExistentExternal: 'El proveedor/cliente solicitado no existe.'
+        }
+        , store: {
+            paramStoreInvalid: 'El parámetro :store es inválido.',
+            nonExistentStore: 'La bodega/sucursal solicitada no existe.'
+        }
+        , subsidiary: {
+            paramSubsidiaryInvalid: 'El parámetro :subsidiary es inválido.',
+            nonExistentSubsidiary: 'La sucursal solicitada no existe.'
+        }
     }
 }
