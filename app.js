@@ -15,7 +15,7 @@ var stores = require('./controllers/stores');
 var products = require('./controllers/products');
 var records = require('./controllers/records');
 var certificates = require('./controllers/certificates');
-var externals = require('./controllers/external');
+var externals = require('./controllers/externals');
 
 var app = express();
 
