@@ -8,6 +8,7 @@ var bodyParser = require('body-parser');
 var routes = require('./controllers/index');
 var auth = require('./controllers/auth');
 var users = require('./controllers/users');
+var profiles = require('./controllers/profiles');
 var permissions = require('./controllers/permissions');
 var subsidiaries = require('./controllers/subsidiaries');
 var stores = require('./controllers/stores');
@@ -39,6 +40,7 @@ app.use(function(req, res, next) {
 app.use('/', routes);
 app.use('/auth', auth);
 app.use('/users', users);
+app.use('/profiles', profiles);
 app.use('/permissions', permissions);
 app.use('/subsidiaries', subsidiaries);
 app.use('/stores', stores);

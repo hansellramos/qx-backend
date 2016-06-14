@@ -22,16 +22,20 @@ module.exports = {
             paramProductMissed: 'El parámetro product es necesario para esta consulta.'
         }
         , product: {
-            paramProductInvalid: 'El parámetro product es inválido.',
+            paramProductInvalid: 'El parámetro :product es inválido.',
             nonExistentProduct: 'El producto solicitado no existe.'
         }
         , certificate: {
-            paramCertificateInvalid: 'El parámetro certificate es inválido.',
+            paramCertificateInvalid: 'El parámetro :certificate es inválido.',
             nonExistentCertificate: 'El certificado solicitado no existe.'
         }
         , user: {
-            paramUserInvalid: 'El parámetro user es inválido.',
+            paramUserInvalid: 'El parámetro :user es inválido.',
             nonExistentUser: 'El usuario solicitado no existe.'
+        }
+        , profile: {
+            paramProfileInvalid: 'El parámetro :profile es inválido.',
+            nonExistentProfile: 'El perfil solicitado no existe.'
         }
     }
 }
