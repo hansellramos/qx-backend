@@ -35,6 +35,7 @@ exports.all = function (cb) {
                     , id: 1
                     , quantity: 1
                     , presentation: 1
+                    , active: 1
                     , remission: 1
                     , product: {
                         _id: 1

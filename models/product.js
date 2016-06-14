@@ -18,6 +18,7 @@ exports.all = function (cb) {
                     _id: 1
                     , name: 1
                     , reference: 1
+                    , active: 1
                     , store: {
                         _id: 1
                         , name: 1
