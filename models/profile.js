@@ -9,7 +9,7 @@ exports.all = function (cb) {
             }
             , {
                 $project: {
-                    id:1, name:1,
+                    id:1, name:1, description:1,
                     active:1
                 }
             }
