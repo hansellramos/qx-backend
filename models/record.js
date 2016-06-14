@@ -61,3 +61,14 @@ exports.all = function (product, cb) {
             cb(err, docs);
         });
 }
+
+//verify if exists an object with the same reference
+exports.exists = function (reference, cb) {
+    db.get()
+        .collection('record').find(
+            { reference: reference }
+        ).limit(1)
+        .toArray(function (err, docs) {
+            cb(err, docs);
+        });
+}

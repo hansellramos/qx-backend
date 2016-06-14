@@ -74,3 +74,15 @@ exports.oneById = function (id, cb) {
             cb(err, docs.length > 0 ? docs[0] : docs);
         });
 }
+
+//verify if exists an object with the same reference
+exports.exists = function (reference, cb) {
+    db.get()
+        .collection('store').find(
+            {reference: reference}
+        )
+        .limit(1)
+        .toArray(function (err, docs) {
+            cb(err, docs);
+        });
+}

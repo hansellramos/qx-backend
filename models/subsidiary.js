@@ -61,6 +61,7 @@ exports.oneById = function (id, cb) {
     });
 }
 
+//verify if exists an object with the same reference
 exports.exists = function (reference, cb) {
     db.get()
         .collection('subsidiary').find(

@@ -71,3 +71,15 @@ exports.oneById = function (id, cb) {
             cb(err, docs.length > 0 ? docs[0] : docs);
         });
 }
+
+//verify if exists an object with the same username
+exports.exists = function (username, cb) {
+    db.get()
+        .collection('user').find(
+            {username: username}
+        )
+        .limit(1)
+        .toArray(function (err, docs) {
+            cb(err, docs);
+        });
+}
