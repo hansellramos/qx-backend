@@ -68,5 +68,5 @@ exports.complete = function(token){
 }
 
 exports.generate = function(token){
-    return sha1(JSON.stringify(token));
+    return sha1(JSON.stringify(token)+"=="+(new Date().getTime()));
 }
