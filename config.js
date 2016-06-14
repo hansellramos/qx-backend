@@ -19,15 +19,19 @@ module.exports = {
             referenceExists: 'La referencia proporcionada ya existe y no puede duplicarse.'
         }
         , record: {
-            paramProductMissed: 'El parametro product es necesario para esta consulta.'
+            paramProductMissed: 'El parámetro product es necesario para esta consulta.'
         }
         , product: {
-            paramProductInvalid: 'El parametro product es inválido.',
+            paramProductInvalid: 'El parámetro product es inválido.',
             nonExistentProduct: 'El producto solicitado no existe.'
         }
         , certificate: {
-            paramCertificateInvalid: 'El parametro certificate es inválido.',
+            paramCertificateInvalid: 'El parámetro certificate es inválido.',
             nonExistentCertificate: 'El certificado solicitado no existe.'
+        }
+        , user: {
+            paramUserInvalid: 'El parámetro user es inválido.',
+            nonExistentUser: 'El usuario solicitado no existe.'
         }
     }
 }

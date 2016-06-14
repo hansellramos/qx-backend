@@ -55,7 +55,7 @@ router.get('/:token', function(req, res, next){
                     data:{}
                 });
             }else{
-                user_model.one(token.user, function(error, user){
+                user_model.oneById(token.user, function(error, user){
                     user.password = '';
                     token.user = user;
                     res.json({
