@@ -1,5 +1,6 @@
 var db = require('../db');
 var ObjectID = require('mongodb').ObjectID;
+var sequence_model = require('./internal/sequence');
 
 exports.all = function (cb) {
     db.get()
@@ -64,4 +65,32 @@ exports.oneById = function (id, cb) {
         ]).toArray(function (err, docs) {
             cb(err, docs.length > 0 ? docs[0] : docs);
         });
+}
+
+// Insert new data
+exports.add = function (data, user, cb) {
+    sequence_model.getSequence('external', function(error, counter){
+        if(error){
+            cb(error);
+        }else{
+            db.get()
+                .collection('external').insertOne({
+                    id: counter.value.seq
+                    , name: data.name
+                    , address: data.address
+                    , phone: data.phone
+                    , notes: data.notes
+                    , active: data.active
+                    , creator: user
+                    , created: (new Date()).getTime()
+                    , modifier: user
+                    , modified: (new Date()).getTime()
+                    , deleter: false
+                    , deleted: false
+                }
+                , function (error, result) {
+                    cb(error, result);
+                });
+        }
+    });
 }

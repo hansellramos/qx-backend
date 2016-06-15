@@ -70,4 +70,56 @@ router.get('/:token/:product', function (req, res, next) {
 
 });
 
+/* Get one record */
+router.get('/:token/:product/:record', function (req, res, next) {
+    var productParamValidation = common.validateObjectId(req.params.product);
+    var recordParamValidation = common.validateObjectId(req.params.record);
+    if(!productParamValidation.validation){
+        res.status(417).json({
+            success:false,
+            message:config.messages.product.paramProductInvalid+" "+productParamValidation.message,
+            data:{}
+        });
+    }else if(!recordParamValidation.validation){
+        res.status(417).json({
+            success:false,
+            message:config.messages.record.paramRecordInvalid+" "+recordParamValidation.message,
+            data:{}
+        });
+    }else{
+        auth_model.verify(req.params.token, function(valid){
+            if(valid){
+                auth_model.refresh(req.params.token, function(){
+                    record_model.one(req.params.record, function(error, result){
+                        if(error){
+                            res.status(503).json({
+                                success:false,
+                                message:config.messages.general.error_500,
+                                data:{}
+                            });
+                        }
+                        else {
+                            if(result==null){
+                                res.status(404).json({
+                                    success:false,
+                                    message:config.messages.record.nonExistentRecord,
+                                    data:{}
+                                });
+                            }else{
+                                res.json(result);
+                            }
+                        }
+                    });
+                });
+            }else{
+                res.status(404).json({
+                    success:false,
+                    message:config.messages.auth.nonExistentToken,
+                    data:{}
+                });
+            }
+        });
+    }
+});
+
 module.exports = router;

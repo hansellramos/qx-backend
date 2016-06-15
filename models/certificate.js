@@ -1,11 +1,13 @@
 var db = require('../db');
 var ObjectID = require('mongodb').ObjectID;
+var sequence_model = require('./internal/sequence');
 
 exports.all = function (cb) {
     var items = [];
     db.get()
         .collection('certificate').aggregate([
-            { $lookup: { from: 'product' , localField: 'product' , foreignField: 'id' , as: 'product' } }
+            { $match: {deleted: false, id: { $gt: 0 } } }
+            , { $lookup: { from: 'product' , localField: 'product' , foreignField: 'id' , as: 'product' } }
             , { $lookup: { from: 'external' , localField: 'customer' , foreignField: 'id' , as: 'customer' } }
             , { $lookup: { from: 'user' , localField: 'creator' , foreignField: 'id' , as: 'creator' } }
             , {
@@ -85,4 +87,36 @@ exports.oneById = function (id, cb) {
         .toArray(function (err, docs) {
             cb(err, docs.length > 0 ? docs[0] : docs);
         });
+}
+
+// Insert new data
+exports.add = function (data, user, cb) {
+    sequence_model.getSequence('certificate', function(error, counter){
+        if(error){
+            cb(error);
+        }else{
+            db.get()
+                .collection('certificate').insertOne({
+                    id: counter.value.seq
+                    , product: data.product
+                    , customer: data.customer
+                    , quantity: data.quantity
+                    , remission: data.remission
+                    , date: data.date
+                    , clause: data.clause
+                    , properties: data.properties
+                    , values: data.values
+                    , active: data.active
+                    , creator: user
+                    , created: (new Date()).getTime()
+                    , modifier: user
+                    , modified: (new Date()).getTime()
+                    , deleter: false
+                    , deleted: false
+                }
+                , function (error, result) {
+                    cb(error, result);
+                });
+        }
+    });
 }

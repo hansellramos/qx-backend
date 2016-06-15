@@ -1,5 +1,6 @@
 var db = require('../db');
 var ObjectID = require('mongodb').ObjectID;
+var sequence_model = require('./internal/sequence');
 
 exports.all = function (cb) {
     db.get()
@@ -82,4 +83,32 @@ exports.exists = function (username, cb) {
         .toArray(function (err, docs) {
             cb(err, docs);
         });
+}
+
+// Insert new data
+exports.add = function (data, user, cb) {
+    sequence_model.getSequence('user', function(error, counter){
+        if(error){
+            cb(error);
+        }else{
+            db.get()
+                .collection('user').insertOne({
+                    id: counter.value.seq
+                    , username: data.username
+                    , password: data.password
+                    , firstname: data.firstname
+                    , lastname: data.lastname
+                    , active: data.active
+                    , creator: user
+                    , created: (new Date()).getTime()
+                    , modifier: user
+                    , modified: (new Date()).getTime()
+                    , deleter: false
+                    , deleted: false
+                }
+                , function (error, result) {
+                    cb(error, result);
+                });
+        }
+    });
 }

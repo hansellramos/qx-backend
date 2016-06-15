@@ -1,11 +1,12 @@
 var db = require('../db');
 var ObjectID = require('mongodb').ObjectID;
+var sequence_model = require('./internal/sequence');
 
 exports.all = function (cb) {
-    var items = [];
     db.get()
         .collection('product').aggregate([
-            { $lookup: { from: 'store', localField: 'store', foreignField: 'id', as: 'store' } }
+            { $match: { deleted: false, id: { $gt: 0 } } }
+            , { $lookup: { from: 'store', localField: 'store', foreignField: 'id', as: 'store' } }
             , {
                 $project: {
                     _id: 1
@@ -32,7 +33,7 @@ exports.one = function (objectId, cb) {
             , { $lookup: { from: 'user', localField: 'deleter', foreignField: 'id', as: 'deleter'} }
             , {
                 $project: {
-                    _id: 1
+                    _id: 1, id:1
                     , name: 1, reference: 1, notes:1
                     , active: 1
                     , store: { _id: 1, name: 1, reference: 1 }
@@ -58,7 +59,7 @@ exports.oneById = function (id, cb) {
             , { $lookup: { from: 'user', localField: 'deleter', foreignField: 'id', as: 'deleter'} }
             , {
                 $project: {
-                    _id: 1
+                    _id: 1, id:1
                     , name: 1, reference: 1, notes:1
                     , active: 1
                     , store: { _id: 1, name: 1, reference: 1 }
@@ -83,4 +84,32 @@ exports.exists = function (reference, cb) {
         .toArray(function (err, docs) {
             cb(err, docs);
         });
+}
+
+// Insert new data
+exports.add = function (data, user, cb) {
+    sequence_model.getSequence('product', function(error, counter){
+        if(error){
+            cb(error);
+        }else{
+            db.get()
+                .collection('product').insertOne({
+                    id: counter.value.seq
+                    , store: data.store
+                    , name: data.name
+                    , reference: data.reference
+                    , properties: data.properties
+                    , active: data.active
+                    , creator: user
+                    , created: (new Date()).getTime()
+                    , modifier: user
+                    , modified: (new Date()).getTime()
+                    , deleter: false
+                    , deleted: false
+                }
+                , function (error, result) {
+                    cb(error, result);
+                });
+        }
+    });
 }

@@ -15,11 +15,14 @@ module.exports = {
         }
         , subsidiary: {
             addedSuccessfully: 'La información ha sido guardado exitosamente.',
+            deletedSuccessfully: 'La información ha sido eliminada exitosamente.',
             notSaved: 'No se ha podido completar la operación por problemas con la información, por favor verifica e intenta nuevamente.',
             referenceExists: 'La referencia proporcionada ya existe y no puede duplicarse.'
         }
         , record: {
-            paramProductMissed: 'El parámetro product es necesario para esta consulta.'
+            paramProductMissed: 'El parámetro :product es necesario para esta consulta.',
+            paramRecordInvalid: 'El parámetro :record es inválido.',
+            nonExistentRecord: 'La muestra solicitada no existe.'
         }
         , product: {
             paramProductInvalid: 'El parámetro :product es inválido.',

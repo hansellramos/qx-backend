@@ -1,5 +1,6 @@
 var db = require('../db');
 var ObjectID = require('mongodb').ObjectID;
+var sequence_model = require('./internal/sequence');
 
 exports.all = function (cb) {
     db.get()
@@ -58,4 +59,42 @@ exports.oneById = function (id, cb) {
         ]).toArray(function (err, docs) {
             cb(err, docs.length > 0 ? docs[0] : docs);
         });
+}
+
+// Insert new data
+exports.add = function (data, user, cb) {
+    sequence_model.getSequence('profile', function(error, counter){
+        if(error){
+            cb(error);
+        }else{
+            db.get()
+                .collection('profile').insertOne({
+                    id: counter.value.seq
+                    , name: data.name
+                    , description: data.description
+                    , permissions: this.formatPermissions(data)
+                    , active: data.active
+                    , creator: user
+                    , created: (new Date()).getTime()
+                    , modifier: user
+                    , modified: (new Date()).getTime()
+                    , deleter: false
+                    , deleted: false
+                }
+                , function (error, result) {
+                    cb(error, result);
+                });
+        }
+    });
+}
+
+exports.formatPermissions = function(profile){
+    var permissions = [];
+    var _t = new Date();
+    for(var i=0;i<profile.permissions;i++){
+        permissions.push({
+            permission: profile.permissions[i], date: _t.getTime()
+        });
+    }
+    return permissions;
 }

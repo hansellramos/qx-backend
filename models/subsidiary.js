@@ -1,9 +1,8 @@
 var db = require('../db');
 var ObjectID = require('mongodb').ObjectID;
-var sequence_model = require('./internal/sequence')
+var sequence_model = require('./internal/sequence');
 
 exports.all = function (cb) {
-    var items = [];
     db.get()
         .collection('subsidiary').aggregate([
             { $match: { deleted: false, id: { $gt: 0 } } }
@@ -104,6 +103,13 @@ exports.update = function (id, data, cb) {
 }
 
 //delete data
-exports.delete = function (id, cb) {
-
+exports.delete = function (objectId, user, cb) {
+    db.get()
+        .collection('subsidiary').findOneAndUpdate(
+            { _id: new ObjectID(objectId) },
+            { $set: { deleted: (new Date()).getTime(), deleter: user } }
+        , function(error, result){
+            cb(error, result);
+        }
+    );
 }
