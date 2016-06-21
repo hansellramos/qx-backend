@@ -94,3 +94,15 @@ exports.add = function (data, user, cb) {
         }
     });
 }
+
+//delete data
+exports.delete = function (objectId, user, cb) {
+    db.get()
+        .collection('external').findOneAndUpdate(
+        { _id: new ObjectID(objectId) },
+        { $set: { deleted: (new Date()).getTime(), deleter: user } }
+        , function(error, result){
+            cb(error, result);
+        }
+    );
+}

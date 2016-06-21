@@ -122,4 +122,65 @@ router.get('/:token/:product/:record', function (req, res, next) {
     }
 });
 
+/* DELETE record elimination. */
+router.delete('/:token/:record', function (req, res, next) {
+    var recordParamValidation = common.validateObjectId(req.params.record);
+    if(!recordParamValidation.validation){
+        res.status(417).json({
+            success:false,
+            message:config.messages.record.paramRecordInvalid+" "+recordParamValidation.message,
+            data:{}
+        });
+    }else{
+        auth_model.verify(req.params.token, function (valid) {
+            if (valid) {
+                var currentUser = valid.user;
+                auth_model.refresh(req.params.token, function () {
+                    var data = req.body;
+                    record_model.one(req.params.record, function (error, docs) {
+                        if (error) {
+                            res.status(503).json({
+                                success: false,
+                                message: config.messages.general.error_500,
+                                data: {}
+                            });
+                        }
+                        else {
+                            if (docs.length == 0) {
+                                res.status(404).json({
+                                    success:false,
+                                    message:config.messages.record.nonExistentRecord,
+                                    data:{}
+                                });
+                            } else {
+                                record_model.delete(req.params.record, currentUser, function (error) {
+                                    if (error) {
+                                        res.status(503).json({
+                                            success: false,
+                                            message: config.messages.general.error_500 + error,
+                                            data: {}
+                                        });
+                                    } else {
+                                        res.json({
+                                            success: true,
+                                            message: config.messages.record.deletedSuccessfully,
+                                            data: {}
+                                        });
+                                    }
+                                });
+                            }
+                        }
+                    });
+                });
+            } else {
+                res.status(404).json({
+                    success: false,
+                    message: config.messages.auth.nonExistentToken,
+                    data: {}
+                });
+            }
+        });
+    }
+});
+
 module.exports = router;

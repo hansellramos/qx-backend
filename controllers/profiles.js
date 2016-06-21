@@ -78,4 +78,65 @@ router.get('/:token/:profile', function (req, res, next) {
   }
 });
 
+/* DELETE profile elimination. */
+router.delete('/:token/:profile', function (req, res, next) {
+  var profileParamValidation = common.validateObjectId(req.params.profile);
+  if(!profileParamValidation.validation){
+    res.status(417).json({
+      success:false,
+      message:config.messages.profile.paramProfileInvalid+" "+profileParamValidation.message,
+      data:{}
+    });
+  }else{
+    auth_model.verify(req.params.token, function (valid) {
+      if (valid) {
+        var currentUser = valid.user;
+        auth_model.refresh(req.params.token, function () {
+          var data = req.body;
+          profile_model.one(req.params.profile, function (error, docs) {
+            if (error) {
+              res.status(503).json({
+                success: false,
+                message: config.messages.general.error_500,
+                data: {}
+              });
+            }
+            else {
+              if (docs.length == 0) {
+                res.status(404).json({
+                  success:false,
+                  message:config.messages.profile.nonExistentProfile,
+                  data:{}
+                });
+              } else {
+                profile_model.delete(req.params.profile, currentUser, function (error) {
+                  if (error) {
+                    res.status(503).json({
+                      success: false,
+                      message: config.messages.general.error_500 + error,
+                      data: {}
+                    });
+                  } else {
+                    res.json({
+                      success: true,
+                      message: config.messages.profile.deletedSuccessfully,
+                      data: {}
+                    });
+                  }
+                });
+              }
+            }
+          });
+        });
+      } else {
+        res.status(404).json({
+          success: false,
+          message: config.messages.auth.nonExistentToken,
+          data: {}
+        });
+      }
+    });
+  }
+});
+
 module.exports = router;

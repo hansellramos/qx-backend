@@ -154,7 +154,7 @@ router.delete('/:token/:subsidiary', function (req, res, next) {
                 var currentUser = valid.user;
                 auth_model.refresh(req.params.token, function () {
                     var data = req.body;
-                    subsidiary_model.exists(data.reference, function (error, docs) {
+                    subsidiary_model.one(req.params.subsidiary, function (error, docs) {
                         if (error) {
                             res.status(503).json({
                                 success: false,

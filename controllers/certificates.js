@@ -79,4 +79,65 @@ router.get('/:token/:certificate', function (req, res, next) {
     }
 });
 
+/* DELETE certificate elimination. */
+router.delete('/:token/:certificate', function (req, res, next) {
+    var certificateParamValidation = common.validateObjectId(req.params.certificate);
+    if(!certificateParamValidation.validation){
+        res.status(417).json({
+            success:false,
+            message:config.messages.certificate.paramCertificateInvalid+" "+certificateParamValidation.message,
+            data:{}
+        });
+    }else{
+        auth_model.verify(req.params.token, function (valid) {
+            if (valid) {
+                var currentUser = valid.user;
+                auth_model.refresh(req.params.token, function () {
+                    var data = req.body;
+                    certificate_model.one(req.params.certificate, function (error, docs) {
+                        if (error) {
+                            res.status(503).json({
+                                success: false,
+                                message: config.messages.general.error_500,
+                                data: {}
+                            });
+                        }
+                        else {
+                            if (docs.length == 0) {
+                                res.status(404).json({
+                                    success:false,
+                                    message:config.messages.certificate.nonExistentCertificatel,
+                                    data:{}
+                                });
+                            } else {
+                                certificate_model.delete(req.params.certificate, currentUser, function (error) {
+                                    if (error) {
+                                        res.status(503).json({
+                                            success: false,
+                                            message: config.messages.general.error_500 + error,
+                                            data: {}
+                                        });
+                                    } else {
+                                        res.json({
+                                            success: true,
+                                            message: config.messages.certificate.deletedSuccessfully,
+                                            data: {}
+                                        });
+                                    }
+                                });
+                            }
+                        }
+                    });
+                });
+            } else {
+                res.status(404).json({
+                    success: false,
+                    message: config.messages.auth.nonExistentToken,
+                    data: {}
+                });
+            }
+        });
+    }
+});
+
 module.exports = router;
