@@ -42,9 +42,11 @@ module.exports = {
         }
         , user: {
             addedSuccessfully: 'La información ha sido guardado exitosamente.',
+            notSaved: 'No se ha podido completar la operación por problemas con la información, por favor verifica e intenta nuevamente.',
             deletedSuccessfully: 'La información ha sido eliminada exitosamente.',
             paramUserInvalid: 'El parámetro :user es inválido.',
-            nonExistentUser: 'El usuario solicitado no existe.'
+            nonExistentUser: 'El usuario solicitado no existe.',
+            usernameExists: 'Ya existe un usuario con el nombre de usuario proporcionado y no puede duplicarse.',
         }
         , profile: {
             addedSuccessfully: 'La información ha sido guardado exitosamente.',

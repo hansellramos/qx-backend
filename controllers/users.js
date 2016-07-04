@@ -78,6 +78,67 @@ router.get('/:token/:user', function (req, res, next) {
   }
 });
 
+/* POST user creation. */
+router.post('/:token', function (req, res, next) {
+  auth_model.verify(req.params.token, function(valid){
+    if(valid){
+      var currentUser = valid.user;
+      auth_model.refresh(req.params.token, function(){
+        var data = req.body;
+        delete data.repeatPassword;
+        user_model.exists(data.username, function(error, docs){
+          if(error){
+            res.status(503).json({
+              success:false,
+              message:config.messages.general.error_500,
+              data:{}
+            });
+          }
+          else {
+            if(docs.length>0){ //exists, don't create new
+              res.status(406).json({
+                success:false,
+                message:config.messages.user.notSaved,
+                data:{
+                  fields: {
+                    username: {
+                      error: true,
+                      message: config.messages.user.usernameExists,
+                      value: data.username
+                    }
+                  }
+                }
+              });
+            }else{
+              user_model.add(data, currentUser, function(error){
+                if(error){
+                  res.status(503).json({
+                    success:false,
+                    message:config.messages.general.error_500+error,
+                    data:{}
+                  });
+                }else{
+                  res.json({
+                    success: true,
+                    message: config.messages.user.addedSuccessfully,
+                    data:{}
+                  });
+                }
+              });
+            }
+          }
+        });
+      });
+    }else{
+      res.status(404).json({
+        success:false,
+        message:config.messages.auth.nonExistentToken,
+        data:{}
+      });
+    }
+  });
+});
+
 /* DELETE user elimination. */
 router.delete('/:token/:user', function (req, res, next) {
   var userParamValidation = common.validateObjectId(req.params.user);

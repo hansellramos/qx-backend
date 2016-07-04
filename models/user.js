@@ -1,6 +1,7 @@
 var db = require('../db');
 var ObjectID = require('mongodb').ObjectID;
 var sequence_model = require('./internal/sequence');
+var sha1 = require('sha1');
 
 exports.all = function (cb) {
     db.get()
@@ -77,7 +78,7 @@ exports.oneById = function (id, cb) {
 exports.exists = function (username, cb) {
     db.get()
         .collection('user').find(
-            {username: username}
+            {username: username, deleted:false}
         )
         .limit(1)
         .toArray(function (err, docs) {
@@ -95,9 +96,10 @@ exports.add = function (data, user, cb) {
                 .collection('user').insertOne({
                     id: counter.value.seq
                     , username: data.username
-                    , password: data.password
+                    , password: sha1(data.password)
                     , firstname: data.firstname
                     , lastname: data.lastname
+                    , email: data.email
                     , active: data.active
                     , creator: user
                     , created: (new Date()).getTime()
