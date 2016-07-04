@@ -76,7 +76,7 @@ exports.oneById = function (id, cb) {
 exports.exists = function (reference, cb) {
     db.get()
         .collection('store').find(
-            {reference: reference}
+            {reference: reference, deleted:false}
         )
         .limit(1)
         .toArray(function (err, docs) {

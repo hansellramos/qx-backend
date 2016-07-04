@@ -17,7 +17,7 @@ module.exports = {
             addedSuccessfully: 'La información ha sido guardado exitosamente.',
             deletedSuccessfully: 'La información ha sido eliminada exitosamente.',
             notSaved: 'No se ha podido completar la operación por problemas con la información, por favor verifica e intenta nuevamente.',
-            referenceExists: 'La referencia proporcionada ya existe y no puede duplicarse.',
+            referenceExists: 'Ya existe una sucursal con la referencia proporcionada y no puede duplicarse.',
             paramSubsidiaryInvalid: 'El parámetro :subsidiary es inválido.',
             nonExistentSubsidiary: 'La sucursal solicitada no existe.'
         }
@@ -61,8 +61,10 @@ module.exports = {
         , store: {
             addedSuccessfully: 'La información ha sido guardado exitosamente.',
             deletedSuccessfully: 'La información ha sido eliminada exitosamente.',
+            notSaved: 'No se ha podido completar la operación por problemas con la información, por favor verifica e intenta nuevamente.',
             paramStoreInvalid: 'El parámetro :store es inválido.',
-            nonExistentStore: 'La bodega/sucursal solicitada no existe.'
+            nonExistentStore: 'La bodega/sucursal solicitada no existe.',
+            referenceExists: 'Ya existe una bodega/tienda con la referencia proporcionada y no puede duplicarse.',
         }
     }
 }

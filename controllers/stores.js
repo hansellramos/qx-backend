@@ -79,6 +79,66 @@ router.get('/:token/:store', function (req, res, next) {
     }
 });
 
+/* POST store creation. */
+router.post('/:token', function (req, res, next) {
+    auth_model.verify(req.params.token, function(valid){
+        if(valid){
+            var currentUser = valid.user;
+            auth_model.refresh(req.params.token, function(){
+                var data = req.body;
+                store_model.exists(data.reference, function(error, docs){
+                    if(error){
+                        res.status(503).json({
+                            success:false,
+                            message:config.messages.general.error_500,
+                            data:{}
+                        });
+                    }
+                    else {
+                        if(docs.length>0){ //exists, don't create new
+                            res.status(406).json({
+                                success:false,
+                                message:config.messages.store.notSaved,
+                                data:{
+                                    fields: {
+                                        reference: {
+                                            error: true,
+                                            message: config.messages.store.referenceExists,
+                                            value: data.reference
+                                        }
+                                    }
+                                }
+                            });
+                        }else{
+                            store_model.add(data, currentUser, function(error){
+                                if(error){
+                                    res.status(503).json({
+                                        success:false,
+                                        message:config.messages.general.error_500+error,
+                                        data:{}
+                                    });
+                                }else{
+                                    res.json({
+                                        success: true,
+                                        message: config.messages.store.addedSuccessfully,
+                                        data:{}
+                                    });
+                                }
+                            });
+                        }
+                    }
+                });
+            });
+        }else{
+            res.status(404).json({
+                success:false,
+                message:config.messages.auth.nonExistentToken,
+                data:{}
+            });
+        }
+    });
+});
+
 /* DELETE store elimination. */
 router.delete('/:token/:store', function (req, res, next) {
     var storeParamValidation = common.validateObjectId(req.params.store);

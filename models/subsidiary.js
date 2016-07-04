@@ -60,11 +60,11 @@ exports.oneById = function (id, cb) {
     });
 }
 
-//verify if exists an object with the same reference
+//verify if exists an object with the same reference and not be deleted
 exports.exists = function (reference, cb) {
     db.get()
         .collection('subsidiary').find(
-            {reference: reference}
+            {reference: reference, deleted:false}
         ).limit(1)
         .toArray(function (err, docs) {
             cb(err, docs);
