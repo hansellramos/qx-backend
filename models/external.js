@@ -67,6 +67,18 @@ exports.oneById = function (id, cb) {
         });
 }
 
+//verify if exists an object with the same reference
+exports.exists = function (name, cb) {
+    db.get()
+        .collection('external').find(
+        {name: name, deleted:false}
+        )
+        .limit(1)
+        .toArray(function (err, docs) {
+            cb(err, docs);
+        });
+}
+
 // Insert new data
 exports.add = function (data, user, cb) {
     sequence_model.getSequence('external', function(error, counter){
@@ -79,6 +91,7 @@ exports.add = function (data, user, cb) {
                     , name: data.name
                     , address: data.address
                     , phone: data.phone
+                    , contact: data.contact
                     , notes: data.notes
                     , active: data.active
                     , creator: user

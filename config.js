@@ -54,9 +54,11 @@ module.exports = {
         }
         , external: {
             addedSuccessfully: 'La información ha sido guardado exitosamente.',
+            notSaved: 'No se ha podido completar la operación por problemas con la información, por favor verifica e intenta nuevamente.',
             deletedSuccessfully: 'La información ha sido eliminada exitosamente.',
             paramExternalInvalid: 'El parámetro :external es inválido.',
-            nonExistentExternal: 'El proveedor/cliente solicitado no existe.'
+            nonExistentExternal: 'El proveedor/cliente solicitado no existe.',
+            nameExists: 'Ya existe un proveedor/cliente con el nombre proporcionado y no puede duplicarse.',
         }
         , store: {
             addedSuccessfully: 'La información ha sido guardado exitosamente.',

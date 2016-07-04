@@ -79,6 +79,66 @@ router.get('/:token/:external', function (req, res, next) {
     }
 });
 
+/* POST external creation. */
+router.post('/:token', function (req, res, next) {
+    auth_model.verify(req.params.token, function(valid){
+        if(valid){
+            var currentUser = valid.user;
+            auth_model.refresh(req.params.token, function(){
+                var data = req.body;
+                external_model.exists(data.name, function(error, docs){
+                    if(error){
+                        res.status(503).json({
+                            success:false,
+                            message:config.messages.general.error_500,
+                            data:{}
+                        });
+                    }
+                    else {
+                        if(docs.length>0){ //exists, don't create new
+                            res.status(406).json({
+                                success:false,
+                                message:config.messages.external.notSaved,
+                                data:{
+                                    fields: {
+                                        name: {
+                                            error: true,
+                                            message: config.messages.external.nameExists,
+                                            value: data.name
+                                        }
+                                    }
+                                }
+                            });
+                        }else{
+                            external_model.add(data, currentUser, function(error){
+                                if(error){
+                                    res.status(503).json({
+                                        success:false,
+                                        message:config.messages.general.error_500+error,
+                                        data:{}
+                                    });
+                                }else{
+                                    res.json({
+                                        success: true,
+                                        message: config.messages.external.addedSuccessfully,
+                                        data:{}
+                                    });
+                                }
+                            });
+                        }
+                    }
+                });
+            });
+        }else{
+            res.status(404).json({
+                success:false,
+                message:config.messages.auth.nonExistentToken,
+                data:{}
+            });
+        }
+    });
+});
+
 /* DELETE external elimination. */
 router.delete('/:token/:external', function (req, res, next) {
     var externalParamValidation = common.validateObjectId(req.params.external);
