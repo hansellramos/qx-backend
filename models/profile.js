@@ -99,6 +99,33 @@ exports.formatPermissions = function(profile){
     return permissions;
 }
 
+// Insert new data
+exports.add = function (data, user, cb) {
+    sequence_model.getSequence('profile', function(error, counter){
+        if(error){
+            cb(error);
+        }else{
+            db.get()
+                .collection('profile').insertOne({
+                    id: counter.value.seq
+                    , name: data.name
+                    , description: data.reference
+                    , permissions: data.permissions
+                    , active: data.active
+                    , creator: user
+                    , created: (new Date()).getTime()
+                    , modifier: user
+                    , modified: (new Date()).getTime()
+                    , deleter: false
+                    , deleted: false
+                }
+                , function (error, result) {
+                    cb(error, result);
+                });
+        }
+    });
+}
+
 //delete data
 exports.delete = function (objectId, user, cb) {
     db.get()
