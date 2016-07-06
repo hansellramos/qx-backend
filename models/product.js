@@ -9,7 +9,7 @@ exports.all = function (cb) {
             , { $lookup: { from: 'store', localField: 'store', foreignField: 'id', as: 'store' } }
             , {
                 $project: {
-                    _id: 1
+                    _id: 1, id:1
                     , name: 1, reference: 1
                     , active: 1
                     , store: { _id: 1, name: 1, reference: 1 }

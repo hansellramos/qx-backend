@@ -79,6 +79,39 @@ router.get('/:token/:certificate', function (req, res, next) {
     }
 });
 
+/* POST certificates creation. */
+router.post('/:token', function (req, res, next) {
+    auth_model.verify(req.params.token, function(valid){
+        if(valid){
+            var currentUser = valid.user;
+            auth_model.refresh(req.params.token, function(){
+                var data = req.body;
+                certificate_model.add(data, currentUser, function(error){
+                    if(error){
+                        res.status(503).json({
+                            success:false,
+                            message:config.messages.general.error_500+error,
+                            data:{}
+                        });
+                    }else{
+                        res.json({
+                            success: true,
+                            message: config.messages.certificate.addedSuccessfully,
+                            data:{}
+                        });
+                    }
+                });
+            });
+        }else{
+            res.status(404).json({
+                success:false,
+                message:config.messages.auth.nonExistentToken,
+                data:{}
+            });
+        }
+    });
+});
+
 /* DELETE certificate elimination. */
 router.delete('/:token/:certificate', function (req, res, next) {
     var certificateParamValidation = common.validateObjectId(req.params.certificate);

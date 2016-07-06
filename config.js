@@ -36,6 +36,7 @@ module.exports = {
         }
         , certificate: {
             addedSuccessfully: 'La información ha sido guardado exitosamente.',
+            notSaved: 'No se ha podido completar la operación por problemas con la información, por favor verifica e intenta nuevamente.',
             deletedSuccessfully: 'La información ha sido eliminada exitosamente.',
             paramCertificateInvalid: 'El parámetro :certificate es inválido.',
             nonExistentCertificate: 'El certificado solicitado no existe.'
