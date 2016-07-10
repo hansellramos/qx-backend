@@ -98,11 +98,13 @@ exports.add = function (data, user, cb) {
             db.get()
                 .collection('certificate').insertOne({
                     id: counter.value.seq
+                    , date: data.date
+                    , subsidiary: data.subsidiary
                     , product: data.product
                     , customer: data.customer
-                    , quantity: data.quantity
                     , remission: data.remission
-                    , date: data.date
+                    , quantity: data.quantity
+                    , presentation: data.presentation
                     , clause: data.clause
                     , properties: data.properties
                     , values: data.values
