@@ -17,7 +17,6 @@ exports.all = function (product, cb) {
                     , creator: { _id:1, id:1, firstname:1, lastname:1 }
                     , analysis_date: 1, elaboration_date: 1, due_date: 1, reception_date: 1
                     , remission: 1
-                    , clause: 1
                     , quantity: 1,existing_quantity: 1
                     , satisfies: 1, veredict: 1
                     , active: 1
