@@ -86,7 +86,7 @@ router.post('/:token', function (req, res, next) {
             var currentUser = valid.user;
             auth_model.refresh(req.params.token, function(){
                 var data = req.body;
-                certificate_model.add(data, currentUser, function(error){
+                certificate_model.add(data, currentUser, function(error, result){
                     if(error){
                         res.status(503).json({
                             success:false,
@@ -94,10 +94,14 @@ router.post('/:token', function (req, res, next) {
                             data:{}
                         });
                     }else{
-                        res.json({
-                            success: true,
-                            message: config.messages.certificate.addedSuccessfully,
-                            data:{}
+                        certificate_model.lastInsertedId(function(error, result){
+                            res.json({
+                                success: true,
+                                message: config.messages.certificate.addedSuccessfully,
+                                data:{
+                                    result: result
+                                }
+                            });
                         });
                     }
                 });

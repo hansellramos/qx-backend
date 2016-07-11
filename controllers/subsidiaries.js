@@ -110,7 +110,7 @@ router.post('/:token', function (req, res, next) {
                                 }
                             });
                         }else{
-                            subsidiary_model.add(data, currentUser, function(error){
+                            subsidiary_model.add(data, currentUser, function(error, result){
                                 if(error){
                                     res.status(503).json({
                                         success:false,
@@ -118,10 +118,14 @@ router.post('/:token', function (req, res, next) {
                                         data:{}
                                     });
                                 }else{
-                                    res.json({
-                                        success: true,
-                                        message: config.messages.subsidiary.addedSuccessfully,
-                                        data:{}
+                                    subsidiary_model.lastInsertedId(function(error, result){
+                                        res.json({
+                                            success: true,
+                                            message: config.messages.subsidiary.addedSuccessfully,
+                                            data:{
+                                                result: result
+                                            }
+                                        });
                                     });
                                 }
                             });

@@ -36,6 +36,7 @@ exports.one = function (objectId, cb) {
         .collection('certificate').aggregate([
             { $match: { _id: new ObjectID(objectId)} }
             , { $limit: 1 }
+            , { $lookup: { from: 'subsidiary' , localField: 'subsidiary' , foreignField: 'id' , as: 'subsidiary' } }
             , { $lookup: { from: 'product' , localField: 'product' , foreignField: 'id' , as: 'product' } }
             , { $lookup: { from: 'external' , localField: 'customer' , foreignField: 'id' , as: 'customer' } }
             , { $lookup: { from: 'user', localField: 'creator', foreignField: 'id', as: 'creator'} }
@@ -46,6 +47,8 @@ exports.one = function (objectId, cb) {
                     id: 1,remission: 1,
                     quantity: 1,presentation: 1,date: 1,
                     active: 1, clause: 1,
+                    subsidiary: { _id: 1, id: 1, name: 1, reference: 1, leader: 1
+                    },
                     product: { _id: 1, id: 1, name: 1, reference: 1 },
                     customer: { _id: 1, id: 1, name: 1 },
                     properties: 1, values: 1
@@ -89,6 +92,20 @@ exports.oneById = function (id, cb) {
         });
 }
 
+exports.lastInsertedId = function(cb){
+    db.get()
+        .collection('certificate')
+        .find({},{_id:1, id:1})
+        .sort({_id:-1})
+        .limit(1).toArray(function(error, results){
+        if(results.length>0){
+            cb(error, results[0]);
+        }else{
+            cb(error, results);
+        }
+    });
+}
+
 // Insert new data
 exports.add = function (data, user, cb) {
     sequence_model.getSequence('certificate', function(error, counter){
@@ -105,9 +122,12 @@ exports.add = function (data, user, cb) {
                     , remission: data.remission
                     , quantity: data.quantity
                     , presentation: data.presentation
-                    , clause: data.clause
                     , properties: data.properties
                     , values: data.values
+                    , elaboration_date: data.elaboration_date
+                    , clause: data.clause
+                    , due_date: data.due_date
+                    , max_dose: data.max_dose
                     , active: data.active
                     , creator: user
                     , created: (new Date()).getTime()
