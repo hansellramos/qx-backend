@@ -1,6 +1,8 @@
 var db = require('../db');
 var ObjectID = require('mongodb').ObjectID;
 var sequence_model = require('./internal/sequence');
+var crypto = require('crypto');
+var config = require('../config');
 
 exports.all = function (cb) {
     var items = [];
@@ -16,6 +18,8 @@ exports.all = function (cb) {
                     , id: 1
                     , quantity: 1
                     , presentation: 1
+                    , max_dose: 1, due_date:1, elaboration_date:1
+                    , verification: 1
                     , active: 1
                     , remission: 1
                     , product: { _id: 1, name: 1, reference: 1 }
@@ -46,7 +50,8 @@ exports.one = function (objectId, cb) {
                 $project: {
                     id: 1,remission: 1,
                     quantity: 1,presentation: 1,date: 1,
-                    active: 1, clause: 1,
+                    active: 1, verification: 1, max_dose: 1, due_date:1, elaboration_date:1
+                    , clause: 1,
                     subsidiary: { _id: 1, id: 1, name: 1, reference: 1, leader: 1
                     },
                     product: { _id: 1, id: 1, name: 1, reference: 1 },
@@ -77,7 +82,8 @@ exports.oneById = function (id, cb) {
                 $project: {
                     id: 1,remission: 1,
                     quantity: 1,presentation: 1,date: 1,
-                    active: 1, clause: 1,
+                    active: 1, verification: 1, max_dose: 1, due_date:1, elaboration_date:1
+                    , clause: 1,
                     product: { _id: 1, id: 1, name: 1, reference: 1 },
                     customer: { _id: 1, id: 1, name: 1 },
                     properties: 1, values: 1
@@ -112,30 +118,32 @@ exports.add = function (data, user, cb) {
         if(error){
             cb(error);
         }else{
+            var _certificate = {
+                id: counter.value.seq
+                , date: data.date
+                , subsidiary: data.subsidiary
+                , product: data.product
+                , customer: data.customer
+                , remission: data.remission
+                , quantity: data.quantity
+                , presentation: data.presentation
+                , properties: data.properties
+                , values: data.values
+                , elaboration_date: data.elaboration_date
+                , clause: data.clause
+                , due_date: data.due_date
+                , max_dose: data.max_dose
+                , active: data.active
+                , creator: user
+                , created: (new Date()).getTime()
+                , modifier: user
+                , modified: (new Date()).getTime()
+                , deleter: false
+                , deleted: false
+            };
+            _certificate.verification = crypto.createHmac('sha256', config.secret).update(JSON.stringify(_certificate)).digest('hex').substring(29,35)
             db.get()
-                .collection('certificate').insertOne({
-                    id: counter.value.seq
-                    , date: data.date
-                    , subsidiary: data.subsidiary
-                    , product: data.product
-                    , customer: data.customer
-                    , remission: data.remission
-                    , quantity: data.quantity
-                    , presentation: data.presentation
-                    , properties: data.properties
-                    , values: data.values
-                    , elaboration_date: data.elaboration_date
-                    , clause: data.clause
-                    , due_date: data.due_date
-                    , max_dose: data.max_dose
-                    , active: data.active
-                    , creator: user
-                    , created: (new Date()).getTime()
-                    , modifier: user
-                    , modified: (new Date()).getTime()
-                    , deleter: false
-                    , deleted: false
-                }
+                .collection('certificate').insertOne(_certificate
                 , function (error, result) {
                     cb(error, result);
                 });
