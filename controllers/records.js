@@ -122,6 +122,67 @@ router.get('/:token/:product/:record', function (req, res, next) {
     }
 });
 
+/* POST record creation. */
+router.post('/:token/:product', function (req, res, next) {
+    auth_model.verify(req.params.token, function(valid){
+        if(valid){
+            var currentUser = valid.user;
+            auth_model.refresh(req.params.token, function(){
+                var data = req.body;
+                data.properties = completeProperties(data.properties, currentUser);
+                record_model.exists(data.reference, function(error, docs){
+                    if(error){
+                        res.status(503).json({
+                            success:false,
+                            message:config.messages.general.error_500,
+                            data:{}
+                        });
+                    }
+                    else {
+                        if(docs.length>0){ //exists, don't create new
+                            res.status(406).json({
+                                success:false,
+                                message:config.messages.record.notSaved,
+                                data:{
+                                    fields: {
+                                        reference: {
+                                            error: true,
+                                            message: config.messages.record.referenceExists,
+                                            value: data.reference
+                                        }
+                                    }
+                                }
+                            });
+                        }else{
+                            record_model.add(data, currentUser, function(error, result){
+                                if(error){
+                                    res.status(503).json({
+                                        success:false,
+                                        message:config.messages.general.error_500+error,
+                                        data:{}
+                                    });
+                                }else{
+                                    res.json({
+                                        success: true,
+                                        message: config.messages.record.addedSuccessfully,
+                                        data:{}
+                                    });
+                                }
+                            });
+                        }
+                    }
+                });
+            });
+        }else{
+            res.status(404).json({
+                success:false,
+                message:config.messages.auth.nonExistentToken,
+                data:{}
+            });
+        }
+    });
+});
+
 /* DELETE record elimination. */
 router.delete('/:token/:record', function (req, res, next) {
     var recordParamValidation = common.validateObjectId(req.params.record);
@@ -182,5 +243,23 @@ router.delete('/:token/:record', function (req, res, next) {
         });
     }
 });
+
+function completeProperties(properties, user){
+    var _properties = [];
+    var _date = new Date();
+    for (var i in properties){
+        _properties.push({
+            property:properties[i].property
+            , value:properties[i].value
+            , creator: user
+            , creation: _date.getTime()
+            , modifier: user
+            , modified: _date.getTime()
+            , deleter: false
+            , deleted: false
+        });
+    }
+    return _properties;
+}
 
 module.exports = router;

@@ -24,7 +24,9 @@ module.exports = {
         , record: {
             addedSuccessfully: 'La información ha sido guardado exitosamente.',
             deletedSuccessfully: 'La información ha sido eliminada exitosamente.',
+            notSaved: 'No se ha podido completar la operación por problemas con la información, por favor verifica e intenta nuevamente.',
             paramProductMissed: 'El parámetro :product es necesario para esta consulta.',
+            referenceExists: 'Ya existe una muestra con el lote proporcionado y no puede duplicarse.',
             paramRecordInvalid: 'El parámetro :record es inválido.',
             nonExistentRecord: 'La muestra solicitada no existe.'
         }

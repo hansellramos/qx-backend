@@ -121,7 +121,7 @@ exports.add = function (data, user, cb) {
                     , existing_quantity: data.existing_quantity
                     , supplier: data.supplier
                     , satisfies: data.satisfies
-                    , clause: data.clause
+                    , notes: data.notes
                     , active: data.active
                     , creator: user
                     , created: (new Date()).getTime()
