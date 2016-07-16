@@ -6,11 +6,12 @@ exports.all = function (cb) {
     db.get()
         .collection('subsidiary').aggregate([
             { $match: { deleted: false, id: { $gt: 0 } } }
-            , { $lookup: { from: 'user', localField: 'leader', foreignField: 'id', as: 'leader'} }
+            //, { $lookup: { from: 'user', localField: 'leader', foreignField: 'id', as: 'leader'} }
             , {
                 $project: {
                     id:1, name:1, reference:1,
-                    leader: { _id:1, id:1, firstname:1, lastname:1 },
+                    leader: 1,
+                    //leader: { _id:1, id:1, firstname:1, lastname:1 },
                     active:1,
                 }
             }
@@ -24,14 +25,15 @@ exports.one = function (objectId, cb) {
         .collection('subsidiary').aggregate([
         { $match: {_id: new ObjectID(objectId)} }
         , { $limit: 1 }
-        , { $lookup: { from: 'user', localField: 'leader', foreignField: 'id', as: 'leader'} }
+        //, { $lookup: { from: 'user', localField: 'leader', foreignField: 'id', as: 'leader'} }
         , { $lookup: { from: 'user', localField: 'creator', foreignField: 'id', as: 'creator'} }
         , { $lookup: { from: 'user', localField: 'modifier', foreignField: 'id', as: 'modifier'} }
         , { $lookup: { from: 'user', localField: 'deleter', foreignField: 'id', as: 'deleter'} }
         , {
             $project: {
                 id:1, name:1, reference:1
-                , leader: { _id:1, id:1, firstname:1, lastname:1 }
+                , leader: 1
+                //leader: { _id:1, id:1, firstname:1, lastname:1 },
                 , creator: { _id:1, id:1, firstname:1, lastname:1 }, created:1
                 , modifier: { _id:1, id:1, firstname:1, lastname:1 }, modified:1
                 , deleter: { _id:1, id:1, firstname:1, lastname:1 }, deleted:1
@@ -48,14 +50,15 @@ exports.oneById = function (id, cb) {
         { $match: {id: id} }
         , { $limit: 1 }
         , { $limit: 1 }
-        , { $lookup: { from: 'user', localField: 'leader', foreignField: 'id', as: 'leader'} }
+        //, { $lookup: { from: 'user', localField: 'leader', foreignField: 'id', as: 'leader'} }
         , { $lookup: { from: 'user', localField: 'creator', foreignField: 'id', as: 'creator'} }
         , { $lookup: { from: 'user', localField: 'modifier', foreignField: 'id', as: 'modifier'} }
         , { $lookup: { from: 'user', localField: 'deleter', foreignField: 'id', as: 'deleter'} }
         , {
             $project: {
                 id:1, name:1, reference:1
-                , leader: { _id:1, id:1, firstname:1, lastname:1 }
+                , leader: 1
+                //leader: { _id:1, id:1, firstname:1, lastname:1 },
                 , creator: { _id:1, id:1, firstname:1, lastname:1 }, created:1
                 , modifier: { _id:1, id:1, firstname:1, lastname:1 }, modified:1
                 , deleter: { _id:1, id:1, firstname:1, lastname:1 }, deleted:1
