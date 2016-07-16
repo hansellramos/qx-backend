@@ -3,6 +3,7 @@ var product_model = require('../models/product');
 var auth_model = require('../models/auth');
 var config = require('../config');
 var common = require('../common');
+var crypto = require('crypto');
 var router = express.Router();
 
 /* GET product listing. */
@@ -94,6 +95,7 @@ router.delete('/:token/:product', function (req, res, next) {
                 var currentUser = valid.user;
                 auth_model.refresh(req.params.token, function () {
                     var data = req.body;
+                    data.properties = completeProperties(data.properties, currentUser);
                     product_model.one(req.params.product, function (error, docs) {
                         if (error) {
                             res.status(503).json({
@@ -139,5 +141,28 @@ router.delete('/:token/:product', function (req, res, next) {
         });
     }
 });
+
+function completeProperties(properties, user){
+    var _properties = [];
+    var _date = new Date();
+    for (var i in properties){
+        var _p = {
+            id:''
+            , name: properties[i].name
+            , validations: properties[i].validations
+            , remission_editable: properties[i].remission_editable
+            , active: properties[i].active
+            , creator: user
+            , creation: _date.getTime()
+            , modifier: user
+            , modified: _date.getTime()
+            , deleter: false
+            , deleted: false
+        };
+        _p.id = crypto.createHmac('sha256', config.secret).update(JSON.stringify(_p)).digest('hex')
+        _properties.push(_p);
+    }
+    return _properties;
+}
 
 module.exports = router;

@@ -33,6 +33,8 @@ module.exports = {
         , product: {
             addedSuccessfully: 'La información ha sido guardado exitosamente.',
             deletedSuccessfully: 'La información ha sido eliminada exitosamente.',
+            notSaved: 'No se ha podido completar la operación por problemas con la información, por favor verifica e intenta nuevamente.',
+            referenceExists: 'Ya existe una muestra con el lote proporcionado y no puede duplicarse.',
             paramProductInvalid: 'El parámetro :product es inválido.',
             nonExistentProduct: 'El producto solicitado no existe.'
         }
