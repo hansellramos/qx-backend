@@ -80,6 +80,67 @@ router.get('/:token/:product', function (req, res, next) {
     }
 });
 
+/* POST product creation. */
+router.post('/:token/', function (req, res, next) {
+    auth_model.verify(req.params.token, function(valid){
+        if(valid){
+            var currentUser = valid.user;
+            auth_model.refresh(req.params.token, function(){
+                var data = req.body;
+                data.properties = completeProperties(data.properties, currentUser);
+                product_model.exists(data.reference, function(error, docs){
+                    if(error){
+                        res.status(503).json({
+                            success:false,
+                            message:config.messages.general.error_500,
+                            data:{}
+                        });
+                    }
+                    else {
+                        if(docs.length>0){ //exists, don't create new
+                            res.status(406).json({
+                                success:false,
+                                message:config.messages.product.notSaved,
+                                data:{
+                                    fields: {
+                                        reference: {
+                                            error: true,
+                                            message: config.messages.product.referenceExists,
+                                            value: data.reference
+                                        }
+                                    }
+                                }
+                            });
+                        }else{
+                            product_model.add(data, currentUser, function(error, result){
+                                if(error){
+                                    res.status(503).json({
+                                        success:false,
+                                        message:config.messages.general.error_500+error,
+                                        data:{}
+                                    });
+                                }else{
+                                    res.json({
+                                        success: true,
+                                        message: config.messages.product.addedSuccessfully,
+                                        data:{}
+                                    });
+                                }
+                            });
+                        }
+                    }
+                });
+            });
+        }else{
+            res.status(404).json({
+                success:false,
+                message:config.messages.auth.nonExistentToken,
+                data:{}
+            });
+        }
+    });
+});
+
 /* DELETE product elimination. */
 router.delete('/:token/:product', function (req, res, next) {
     var productParamValidation = common.validateObjectId(req.params.product);
@@ -149,7 +210,7 @@ function completeProperties(properties, user){
         var _p = {
             id:''
             , name: properties[i].name
-            , validations: properties[i].validations
+            , validation: properties[i].validation
             , remission_editable: properties[i].remission_editable
             , active: properties[i].active
             , creator: user

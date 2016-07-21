@@ -92,7 +92,7 @@ exports.oneByReference = function (reference, cb) {
 exports.exists = function (reference, cb) {
     db.get()
         .collection('record').find(
-            { reference: reference }
+            { reference: reference, deleted:false }
         ).limit(1)
         .toArray(function (err, docs) {
             cb(err, docs);

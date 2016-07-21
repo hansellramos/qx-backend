@@ -11,7 +11,7 @@ exports.all = function (cb) {
                 $project: {
                     _id: 1, id:1
                     , name: 1, reference: 1
-                    , max_dose:1, due_date:1
+                    , max_dose:1, due_date:1, certification_nsf:1
                     , active: 1
                     , store: { _id: 1, name: 1, reference: 1 }
                     , properties: { name: 1, id: 1 }
@@ -36,10 +36,10 @@ exports.one = function (objectId, cb) {
                 $project: {
                     _id: 1, id:1
                     , name: 1, reference: 1, notes:1
-                    , max_dose:1, due_date:1
+                    , max_dose:1, due_date:1, certification_nsf:1
                     , active: 1
                     , store: { _id: 1, name: 1, reference: 1 }
-                    , properties: { name: 1, id: 1, validations:1, active:1 }
+                    , properties: { name: 1, id: 1, validation:1, active:1 }
                     , creator: { _id:1, id:1, firstname:1, lastname:1 }, created:1
                     , modifier: { _id:1, id:1, firstname:1, lastname:1 }, modified:1
                     , deleter: { _id:1, id:1, firstname:1, lastname:1 }, deleted:1
@@ -63,10 +63,10 @@ exports.oneById = function (id, cb) {
                 $project: {
                     _id: 1, id:1
                     , name: 1, reference: 1, notes:1
-                    , max_dose:1, due_date:1
+                    , max_dose:1, due_date:1, certification_nsf:1
                     , active: 1
                     , store: { _id: 1, name: 1, reference: 1 }
-                    , properties: { name: 1, id: 1, validations:1, active:1 }
+                    , properties: { name: 1, id: 1, validation:1, active:1 }
                     , creator: { _id:1, id:1, firstname:1, lastname:1 }, created:1
                     , modifier: { _id:1, id:1, firstname:1, lastname:1 }, modified:1
                     , deleter: { _id:1, id:1, firstname:1, lastname:1 }, deleted:1
@@ -81,7 +81,7 @@ exports.oneById = function (id, cb) {
 exports.exists = function (reference, cb) {
     db.get()
         .collection('product').find(
-            { reference: reference }
+            { reference: reference, deleted:false }
         )
         .limit(1)
         .toArray(function (err, docs) {
@@ -103,6 +103,7 @@ exports.add = function (data, user, cb) {
                     , reference: data.reference
                     , max_dose: data.max_dose
                     , due_date: data.due_date
+                    , certification_nsf: data.certification_nsf
                     , properties: data.properties
                     , active: data.active
                     , creator: user
