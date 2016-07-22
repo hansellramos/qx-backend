@@ -70,6 +70,7 @@ module.exports = {
         }
         , store: {
             addedSuccessfully: 'La información ha sido guardado exitosamente.',
+            updatedSuccessfully: 'La información ha sido actualizada exitosamente.',
             deletedSuccessfully: 'La información ha sido eliminada exitosamente.',
             notSaved: 'No se ha podido completar la operación por problemas con la información, por favor verifica e intenta nuevamente.',
             paramStoreInvalid: 'El parámetro :store es inválido.',

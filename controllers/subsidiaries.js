@@ -143,7 +143,7 @@ router.post('/:token', function (req, res, next) {
     });
 });
 
-/* POST subsidiary creation. */
+/* POST subsidiary update. */
 router.put('/:token/:subsidiary', function (req, res, next) {
     var subsidiaryParamValidation = common.validateObjectId(req.params.subsidiary);
     if(!subsidiaryParamValidation.validation){
@@ -196,9 +196,7 @@ router.put('/:token/:subsidiary', function (req, res, next) {
                                         res.json({
                                             success: true,
                                             message: config.messages.subsidiary.updatedSuccessfully,
-                                            data: {
-                                                result: result
-                                            }
+                                            data: {}
                                         });
                                     }
                                 });

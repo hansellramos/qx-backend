@@ -114,6 +114,18 @@ exports.add = function (data, user, cb) {
     });
 }
 
+// Update existent data
+exports.update = function (objectId, data, user, cb) {
+    db.get()
+        .collection('store').findOneAndUpdate(
+        { _id: new ObjectID(objectId) },
+        { $set: data }
+        , function(error, result){
+            cb(error, result);
+        }
+    );
+}
+
 //delete data
 exports.delete = function (objectId, user, cb) {
     db.get()
