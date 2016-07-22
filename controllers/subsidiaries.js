@@ -143,6 +143,80 @@ router.post('/:token', function (req, res, next) {
     });
 });
 
+/* POST subsidiary creation. */
+router.put('/:token/:subsidiary', function (req, res, next) {
+    var subsidiaryParamValidation = common.validateObjectId(req.params.subsidiary);
+    if(!subsidiaryParamValidation.validation){
+        res.status(417).json({
+            success:false,
+            message:config.messages.subsidiary.paramSubsidiaryInvalid+" "+subsidiaryParamValidation.message,
+            data:{}
+        });
+    }else {
+        auth_model.verify(req.params.token, function (valid) {
+            if (valid) {
+                var currentUser = valid.user;
+                auth_model.refresh(req.params.token, function () {
+                    var data = req.body;
+                    //update flags
+                    data.modifier = currentUser;
+                    data.modified = (new Date()).getTime();
+                    subsidiary_model.exists(data.reference, function (error, docs) {
+                        if (error) {
+                            res.status(503).json({
+                                success: false,
+                                message: config.messages.general.error_500,
+                                data: {}
+                            });
+                        }
+                        else {
+                            if (docs.length > 0) { //exists, don't create new
+                                res.status(406).json({
+                                    success: false,
+                                    message: config.messages.subsidiary.notSaved,
+                                    data: {
+                                        fields: {
+                                            reference: {
+                                                error: true,
+                                                message: config.messages.subsidiary.referenceExists,
+                                                value: data.reference
+                                            }
+                                        }
+                                    }
+                                });
+                            } else {
+                                subsidiary_model.update(req.params.subsidiary, data, currentUser, function (error, result) {
+                                    if (error) {
+                                        res.status(503).json({
+                                            success: false,
+                                            message: config.messages.general.error_500 + error,
+                                            data: {}
+                                        });
+                                    } else {
+                                        res.json({
+                                            success: true,
+                                            message: config.messages.subsidiary.updatedSuccessfully,
+                                            data: {
+                                                result: result
+                                            }
+                                        });
+                                    }
+                                });
+                            }
+                        }
+                    });
+                });
+            } else {
+                res.status(404).json({
+                    success: false,
+                    message: config.messages.auth.nonExistentToken,
+                    data: {}
+                });
+            }
+        });
+    }
+});
+
 /* DELETE subsidiary elimination. */
 router.delete('/:token/:subsidiary', function (req, res, next) {
     var subsidiaryParamValidation = common.validateObjectId(req.params.subsidiary);

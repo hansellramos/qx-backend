@@ -14,7 +14,8 @@ module.exports = {
             endedTokenSucessfully:'La sessión ha sido terminada exitosamente'
         }
         , subsidiary: {
-            addedSuccessfully: 'La información ha sido guardado exitosamente.',
+            addedSuccessfully: 'La información ha sido guardada exitosamente.',
+            updatedSuccessfully: 'La información ha sido actualizada exitosamente.',
             deletedSuccessfully: 'La información ha sido eliminada exitosamente.',
             notSaved: 'No se ha podido completar la operación por problemas con la información, por favor verifica e intenta nuevamente.',
             referenceExists: 'Ya existe una sucursal con la referencia proporcionada y no puede duplicarse.',
