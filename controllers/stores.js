@@ -137,7 +137,9 @@ router.post('/:token', function (req, res, next) {
             });
         }
     });
-});/* POST store update. */
+});
+
+/* POST store update. */
 router.put('/:token/:store', function (req, res, next) {
     var storeParamValidation = common.validateObjectId(req.params.store);
     if(!storeParamValidation.validation){

@@ -24,6 +24,7 @@ module.exports = {
         }
         , record: {
             addedSuccessfully: 'La información ha sido guardado exitosamente.',
+            updatedSuccessfully: 'La información ha sido actualizada exitosamente.',
             deletedSuccessfully: 'La información ha sido eliminada exitosamente.',
             notSaved: 'No se ha podido completar la operación por problemas con la información, por favor verifica e intenta nuevamente.',
             paramProductMissed: 'El parámetro :product es necesario para esta consulta.',
@@ -48,6 +49,7 @@ module.exports = {
         }
         , user: {
             addedSuccessfully: 'La información ha sido guardado exitosamente.',
+            updatedSuccessfully: 'La información ha sido actualizada exitosamente.',
             notSaved: 'No se ha podido completar la operación por problemas con la información, por favor verifica e intenta nuevamente.',
             deletedSuccessfully: 'La información ha sido eliminada exitosamente.',
             paramUserInvalid: 'El parámetro :user es inválido.',
@@ -56,12 +58,14 @@ module.exports = {
         }
         , profile: {
             addedSuccessfully: 'La información ha sido guardado exitosamente.',
+            updatedSuccessfully: 'La información ha sido actualizada exitosamente.',
             deletedSuccessfully: 'La información ha sido eliminada exitosamente.',
             paramProfileInvalid: 'El parámetro :profile es inválido.',
             nonExistentProfile: 'El perfil solicitado no existe.'
         }
         , external: {
             addedSuccessfully: 'La información ha sido guardado exitosamente.',
+            updatedSuccessfully: 'La información ha sido actualizada exitosamente.',
             notSaved: 'No se ha podido completar la operación por problemas con la información, por favor verifica e intenta nuevamente.',
             deletedSuccessfully: 'La información ha sido eliminada exitosamente.',
             paramExternalInvalid: 'El parámetro :external es inválido.',
