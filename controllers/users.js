@@ -139,6 +139,78 @@ router.post('/:token', function (req, res, next) {
   });
 });
 
+/* POST user update. */
+router.put('/:token/:user', function (req, res, next) {
+  var userParamValidation = common.validateObjectId(req.params.user);
+  if(!userParamValidation.validation){
+    res.status(417).json({
+      success:false,
+      message:config.messages.user.paramUserInvalid+" "+userParamValidation.message,
+      data:{}
+    });
+  }else {
+    auth_model.verify(req.params.token, function (valid) {
+      if (valid) {
+        var currentUser = valid.user;
+        auth_model.refresh(req.params.token, function () {
+          var data = req.body;
+          //update flags
+          data.modifier = currentUser;
+          data.modified = (new Date()).getTime();
+          user_model.exists(data.username, function (error, docs) {
+            if (error) {
+              res.status(503).json({
+                success: false,
+                message: config.messages.general.error_500,
+                data: {}
+              });
+            }
+            else {
+              if (docs.length > 0) { //exists, don't create new
+                res.status(406).json({
+                  success: false,
+                  message: config.messages.user.notSaved,
+                  data: {
+                    fields: {
+                      reference: {
+                        error: true,
+                        message: config.messages.user.referenceExists,
+                        value: data.reference
+                      }
+                    }
+                  }
+                });
+              } else {
+                user_model.update(req.params.user, data, currentUser, function (error, result) {
+                  if (error) {
+                    res.status(503).json({
+                      success: false,
+                      message: config.messages.general.error_500 + error,
+                      data: {}
+                    });
+                  } else {
+                    res.json({
+                      success: true,
+                      message: config.messages.user.updatedSuccessfully,
+                      data: {}
+                    });
+                  }
+                });
+              }
+            }
+          });
+        });
+      } else {
+        res.status(404).json({
+          success: false,
+          message: config.messages.auth.nonExistentToken,
+          data: {}
+        });
+      }
+    });
+  }
+});
+
 /* DELETE user elimination. */
 router.delete('/:token/:user', function (req, res, next) {
   var userParamValidation = common.validateObjectId(req.params.user);

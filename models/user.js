@@ -37,7 +37,7 @@ exports.one = function (objectId, cb) {
                     firstname:1, lastname:1,
                     allData:1, isAdmin:1,
                     active:1,
-                    profile: { _id:1, name:1, permissions:1 }
+                    profile: { _id:1, id:1, name:1, permissions:1 }
                     , creator: { _id:1, id:1, firstname:1, lastname:1 }, created:1
                     , modifier: { _id:1, id:1, firstname:1, lastname:1 }, modified:1
                     , deleter: { _id:1, id:1, firstname:1, lastname:1 }, deleted:1
@@ -63,7 +63,7 @@ exports.oneById = function (id, cb) {
                     firstname:1, lastname:1,
                     allData:1, isAdmin:1,
                     active:1,
-                    profile: { _id:1, name:1, permissions:1 }
+                    profile: { _id:1, id:1, name:1, permissions:1 }
                     , creator: { _id:1, id:1, firstname:1, lastname:1 }, created:1
                     , modifier: { _id:1, id:1, firstname:1, lastname:1 }, modified:1
                     , deleter: { _id:1, id:1, firstname:1, lastname:1 }, deleted:1
@@ -113,6 +113,18 @@ exports.add = function (data, user, cb) {
                 });
         }
     });
+}
+
+// Update existent data
+exports.update = function (objectId, data, user, cb) {
+    db.get()
+        .collection('user').findOneAndUpdate(
+        { _id: new ObjectID(objectId) },
+        { $set: data }
+        , function(error, result){
+            cb(error, result);
+        }
+    );
 }
 
 //delete data
