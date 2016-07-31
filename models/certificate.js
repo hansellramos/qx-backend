@@ -20,7 +20,7 @@ exports.all = function (cb) {
                     , presentation: 1
                     , max_dose: 1, due_date:1, elaboration_date:1
                     , verification: 1
-                    , active: 1
+                    , leader:1, active: 1
                     , remission: 1
                     , product: { _id: 1, name: 1, reference: 1 }
                     , customer: { _id: 1, name: 1 }
@@ -51,7 +51,7 @@ exports.one = function (objectId, cb) {
                     id: 1,remission: 1,
                     quantity: 1,presentation: 1,date: 1,
                     active: 1, verification: 1, max_dose: 1, due_date:1, elaboration_date:1
-                    , clause: 1,
+                    , leader:1, clause: 1,
                     subsidiary: { _id: 1, id: 1, name: 1, reference: 1, leader: 1
                     },
                     product: { _id: 1, id: 1, name: 1, reference: 1 },
@@ -83,7 +83,7 @@ exports.oneById = function (id, cb) {
                     id: 1,remission: 1,
                     quantity: 1,presentation: 1,date: 1,
                     active: 1, verification: 1, max_dose: 1, due_date:1, elaboration_date:1
-                    , clause: 1,
+                    , leader:1, clause: 1,
                     product: { _id: 1, id: 1, name: 1, reference: 1 },
                     customer: { _id: 1, id: 1, name: 1 },
                     properties: 1, values: 1
@@ -130,6 +130,7 @@ exports.add = function (data, user, cb) {
                 , properties: data.properties
                 , values: data.values
                 , elaboration_date: data.elaboration_date
+                , leader: data.leader
                 , clause: data.clause
                 , due_date: data.due_date
                 , max_dose: data.max_dose
