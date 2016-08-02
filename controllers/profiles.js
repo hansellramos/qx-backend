@@ -111,6 +111,51 @@ router.post('/:token', function (req, res, next) {
   });
 });
 
+/* POST profile update. */
+router.put('/:token/:profile', function (req, res, next) {
+  var profileParamValidation = common.validateObjectId(req.params.profile);
+  if(!profileParamValidation.validation){
+    res.status(417).json({
+      success:false,
+      message:config.messages.profile.paramProfileInvalid+" "+profileParamValidation.message,
+      data:{}
+    });
+  }else{
+    auth_model.verify(req.params.token, function (valid) {
+      if (valid) {
+        var currentUser = valid.user;
+        auth_model.refresh(req.params.token, function () {
+          var data = req.body;
+          //update flags
+          data.modifier = currentUser;
+          data.modified = (new Date()).getTime();
+          profile_model.update(req.params.profile, data, currentUser, function (error, result) {
+            if (error) {
+              res.status(503).json({
+                success: false,
+                message: config.messages.general.error_500 + error,
+                data: {}
+              });
+            } else {
+              res.json({
+                success: true,
+                message: config.messages.profile.updatedSuccessfully,
+                data: {}
+              });
+            }
+          });
+        });
+      } else {
+        res.status(404).json({
+          success: false,
+          message: config.messages.auth.nonExistentToken,
+          data: {}
+        });
+      }
+    });
+  }
+});
+
 /* DELETE profile elimination. */
 router.delete('/:token/:profile', function (req, res, next) {
   var profileParamValidation = common.validateObjectId(req.params.profile);
