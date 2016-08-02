@@ -11,7 +11,7 @@ exports.all = function (cb) {
             , {
                 $project: {
                     id:1, username:1,
-                    firstname:1, lastname:1,
+                    firstname:1, lastname:1,email:1,
                     allData:1, isAdmin:1,
                     active:1,
                     profile: { _id:1, name:1 }
@@ -34,7 +34,7 @@ exports.one = function (objectId, cb) {
             , {
                 $project: {
                     id:1, username:1,
-                    firstname:1, lastname:1,
+                    firstname:1, lastname:1,email:1,
                     allData:1, isAdmin:1,
                     active:1,
                     profile: { _id:1, id:1, name:1, permissions:1 }
@@ -60,7 +60,7 @@ exports.oneById = function (id, cb) {
             , {
                 $project: {
                     id:1, username:1,
-                    firstname:1, lastname:1,
+                    firstname:1, lastname:1,email:1,
                     allData:1, isAdmin:1,
                     active:1,
                     profile: { _id:1, id:1, name:1, permissions:1 }
@@ -117,6 +117,9 @@ exports.add = function (data, user, cb) {
 
 // Update existent data
 exports.update = function (objectId, data, user, cb) {
+    if(data.password){
+        data.password = sha1(data.password);
+    }
     db.get()
         .collection('user').findOneAndUpdate(
         { _id: new ObjectID(objectId) },
