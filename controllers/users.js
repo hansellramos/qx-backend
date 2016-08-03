@@ -3,6 +3,7 @@ var user_model = require('../models/user');
 var auth_model = require('../models/auth');
 var config = require('../config');
 var common = require('../common');
+var log = require('../models/internal/log');
 var router = express.Router();
 
 /* GET users listing. */
@@ -118,10 +119,18 @@ router.post('/:token', function (req, res, next) {
                     data:{}
                   });
                 }else{
-                  res.json({
-                    success: true,
-                    message: config.messages.user.addedSuccessfully,
-                    data:{}
+                  user_model.lastInsertedId(function(error, result){
+                    log.save(currentUser, 'user','add', result._id, data,[], function(error){
+                      if(error){ }else{
+                        res.json({
+                          success: true,
+                          message: config.messages.user.addedSuccessfully,
+                          data:{
+                            result: result
+                          }
+                        });
+                      }
+                    });
                   });
                 }
               });
@@ -189,10 +198,14 @@ router.put('/:token/:user', function (req, res, next) {
                       data: {}
                     });
                   } else {
-                    res.json({
-                      success: true,
-                      message: config.messages.user.updatedSuccessfully,
-                      data: {}
+                    log.save(currentUser, 'user','update', req.params.user, data, docs, function(error){
+                      if(error){ }else{
+                        res.json({
+                          success: true,
+                          message: config.messages.user.updatedSuccessfully,
+                          data: {}
+                        });
+                      }
                     });
                   }
                 });
@@ -250,10 +263,14 @@ router.delete('/:token/:user', function (req, res, next) {
                       data: {}
                     });
                   } else {
-                    res.json({
-                      success: true,
-                      message: config.messages.user.deletedSuccessfully,
-                      data: {}
+                    log.save(currentUser, 'user','delete', req.params.user, [], docs, function(error){
+                      if(error){ }else{
+                        res.json({
+                          success: true,
+                          message: config.messages.user.deletedSuccessfully,
+                          data: {}
+                        });
+                      }
                     });
                   }
                 });

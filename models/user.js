@@ -86,6 +86,20 @@ exports.exists = function (username, cb) {
         });
 }
 
+exports.lastInsertedId = function(cb){
+    db.get()
+        .collection('user')
+        .find({},{_id:1})
+        .sort({_id:-1})
+        .limit(1).toArray(function(error, results){
+        if(results.length>0){
+            cb(error, results[0]);
+        }else{
+            cb(error, results);
+        }
+    });
+}
+
 // Insert new data
 exports.add = function (data, user, cb) {
     sequence_model.getSequence('user', function(error, counter){
@@ -100,6 +114,7 @@ exports.add = function (data, user, cb) {
                     , firstname: data.firstname
                     , lastname: data.lastname
                     , email: data.email
+                    , profile: data.profile
                     , active: data.active
                     , creator: user
                     , created: (new Date()).getTime()
