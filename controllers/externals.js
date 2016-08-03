@@ -3,6 +3,7 @@ var external_model = require('../models/external');
 var auth_model = require('../models/auth');
 var config = require('../config');
 var common = require('../common');
+var log = require('../models/internal/log');
 var router = express.Router();
 
 /* GET externals listing. */
@@ -118,10 +119,18 @@ router.post('/:token', function (req, res, next) {
                                         data:{}
                                     });
                                 }else{
-                                    res.json({
-                                        success: true,
-                                        message: config.messages.external.addedSuccessfully,
-                                        data:{}
+                                    external_model.lastInsertedId(function(error, result){
+                                        log.save(currentUser, 'external','add', result._id, data,[], function(error){
+                                            if(error){ }else{
+                                                res.json({
+                                                    success: true,
+                                                    message: config.messages.external.addedSuccessfully,
+                                                    data:{
+                                                        result: result
+                                                    }
+                                                });
+                                            }
+                                        });
                                     });
                                 }
                             });
@@ -181,10 +190,14 @@ router.put('/:token/:external', function (req, res, next) {
                                             data: {}
                                         });
                                     } else {
-                                        res.json({
-                                            success: true,
-                                            message: config.messages.external.updatedSuccessfully,
-                                            data: {}
+                                        log.save(currentUser, 'external','update', req.params.external, data, docs, function(error){
+                                            if(error){ }else{
+                                                res.json({
+                                                    success: true,
+                                                    message: config.messages.external.updatedSuccessfully,
+                                                    data: {}
+                                                });
+                                            }
                                         });
                                     }
                                 });
@@ -242,10 +255,14 @@ router.delete('/:token/:external', function (req, res, next) {
                                             data: {}
                                         });
                                     } else {
-                                        res.json({
-                                            success: true,
-                                            message: config.messages.external.deletedSuccessfully,
-                                            data: {}
+                                        log.save(currentUser, 'external','delete', req.params.external, [], docs, function(error){
+                                            if(error){ }else{
+                                                res.json({
+                                                    success: true,
+                                                    message: config.messages.external.deletedSuccessfully,
+                                                    data: {}
+                                                });
+                                            }
                                         });
                                     }
                                 });

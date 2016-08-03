@@ -120,7 +120,7 @@ router.post('/:token', function (req, res, next) {
                                     });
                                 }else{
                                     subsidiary_model.lastInsertedId(function(error, result){
-                                        log.save(currentUser, 'subsidiary','add', req.params.subsidiary, data,[], function(error){
+                                        log.save(currentUser, 'subsidiary','add', result._id, data,[], function(error){
                                             if(error){ }else{
                                                 res.json({
                                                     success: true,
