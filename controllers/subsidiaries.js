@@ -3,6 +3,7 @@ var subsidiary_model = require('../models/subsidiary');
 var auth_model = require('../models/auth');
 var config = require('../config');
 var common = require('../common');
+var log = require('../models/internal/log');
 var router = express.Router();
 
 /* GET subsidiary listing. */
@@ -119,11 +120,15 @@ router.post('/:token', function (req, res, next) {
                                     });
                                 }else{
                                     subsidiary_model.lastInsertedId(function(error, result){
-                                        res.json({
-                                            success: true,
-                                            message: config.messages.subsidiary.addedSuccessfully,
-                                            data:{
-                                                result: result
+                                        log.save(currentUser, 'subsidiary','add', req.params.subsidiary, data,[], function(error){
+                                            if(error){ }else{
+                                                res.json({
+                                                    success: true,
+                                                    message: config.messages.subsidiary.addedSuccessfully,
+                                                    data:{
+                                                        result: result
+                                                    }
+                                                });
                                             }
                                         });
                                     });
@@ -161,7 +166,7 @@ router.put('/:token/:subsidiary', function (req, res, next) {
                     //update flags
                     data.modifier = currentUser;
                     data.modified = (new Date()).getTime();
-                    subsidiary_model.exists(data.reference, function (error, docs) {
+                    subsidiary_model.one(req.params.subsidiary, function (error, docs) {
                         if (error) {
                             res.status(503).json({
                                 success: false,
@@ -170,19 +175,11 @@ router.put('/:token/:subsidiary', function (req, res, next) {
                             });
                         }
                         else {
-                            if (docs.length > 0) { //exists, don't create new
-                                res.status(406).json({
-                                    success: false,
-                                    message: config.messages.subsidiary.notSaved,
-                                    data: {
-                                        fields: {
-                                            reference: {
-                                                error: true,
-                                                message: config.messages.subsidiary.referenceExists,
-                                                value: data.reference
-                                            }
-                                        }
-                                    }
+                            if (docs.length == 0) {
+                                res.status(404).json({
+                                    success:false,
+                                    message:config.messages.subsidiary.nonExistentSubsidiary,
+                                    data:{}
                                 });
                             } else {
                                 subsidiary_model.update(req.params.subsidiary, data, currentUser, function (error, result) {
@@ -193,10 +190,14 @@ router.put('/:token/:subsidiary', function (req, res, next) {
                                             data: {}
                                         });
                                     } else {
-                                        res.json({
-                                            success: true,
-                                            message: config.messages.subsidiary.updatedSuccessfully,
-                                            data: {}
+                                        log.save(currentUser, 'subsidiary','update', req.params.subsidiary, data, docs, function(error){
+                                            if(error){ }else{
+                                                res.json({
+                                                    success: true,
+                                                    message: config.messages.subsidiary.updatedSuccessfully,
+                                                    data: {}
+                                                });
+                                            }
                                         });
                                     }
                                 });
@@ -254,10 +255,14 @@ router.delete('/:token/:subsidiary', function (req, res, next) {
                                             data: {}
                                         });
                                     } else {
-                                        res.json({
-                                            success: true,
-                                            message: config.messages.subsidiary.deletedSuccessfully,
-                                            data: {}
+                                        log.save(currentUser, 'subsidiary','delete', req.params.subsidiary, [], docs, function(error){
+                                            if(error){ }else{
+                                                res.json({
+                                                    success: true,
+                                                    message: config.messages.subsidiary.deletedSuccessfully,
+                                                    data: {}
+                                                });
+                                            }
                                         });
                                     }
                                 });
