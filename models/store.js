@@ -126,6 +126,20 @@ exports.update = function (objectId, data, user, cb) {
     );
 }
 
+exports.lastInsertedId = function(cb){
+    db.get()
+        .collection('store')
+        .find({},{_id:1})
+        .sort({_id:-1})
+        .limit(1).toArray(function(error, results){
+        if(results.length>0){
+            cb(error, results[0]);
+        }else{
+            cb(error, results);
+        }
+    });
+}
+
 //delete data
 exports.delete = function (objectId, user, cb) {
     db.get()
