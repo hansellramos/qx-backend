@@ -4,6 +4,7 @@ var product_model = require('../models/product');
 var auth_model = require('../models/auth');
 var config = require('../config');
 var common = require('../common');
+var log = require('../models/internal/log');
 var router = express.Router();
 
 /* GET records listing. */
@@ -162,10 +163,18 @@ router.post('/:token/:product', function (req, res, next) {
                                         data:{}
                                     });
                                 }else{
-                                    res.json({
-                                        success: true,
-                                        message: config.messages.record.addedSuccessfully,
-                                        data:{}
+                                    record_model.lastInsertedId(function(error, result){
+                                        log.save(currentUser, 'record','add', result._id, data,[], function(error){
+                                            if(error){ }else{
+                                                res.json({
+                                                    success: true,
+                                                    message: config.messages.record.addedSuccessfully,
+                                                    data:{
+                                                        result: result
+                                                    }
+                                                });
+                                            }
+                                        });
                                     });
                                 }
                             });
@@ -222,10 +231,14 @@ router.delete('/:token/:record', function (req, res, next) {
                                             data: {}
                                         });
                                     } else {
-                                        res.json({
-                                            success: true,
-                                            message: config.messages.record.deletedSuccessfully,
-                                            data: {}
+                                        log.save(currentUser, 'record','delete', req.params.record, [], docs, function(error){
+                                            if(error){ }else{
+                                                res.json({
+                                                    success: true,
+                                                    message: config.messages.record.deletedSuccessfully,
+                                                    data: {}
+                                                });
+                                            }
                                         });
                                     }
                                 });
