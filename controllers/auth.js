@@ -9,6 +9,7 @@ router.post('/:token', function(req, res, next){
     auth_model.authenticate(req.body.username, sha1(req.body.password), function(error, doc){
         if(error){ cb(error);
         }else{
+            console.log(doc);
             if(doc){
                 var token = {
                     user: doc.id

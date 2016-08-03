@@ -44,12 +44,18 @@ exports.refresh = function (token, cb) {
 }
 
 exports.authenticate = function(username, password, cb){
-    db.get().collection('user')
-        .findOne({
-            username:username,
-            password:password,
-            active:true
-        }, cb);
+    db.get()
+        .collection('user').aggregate([
+            {
+                $match:{
+                    username:new RegExp('^'+username+'$','i'),
+                    password:password
+                }
+            }
+        ])
+        .toArray(function (err, docs) {
+            cb(err, docs.length > 0 ? docs[0] : false);
+        });
 }
 
 exports.complete = function(token){
