@@ -3,6 +3,7 @@ var product_model = require('../models/product');
 var auth_model = require('../models/auth');
 var config = require('../config');
 var common = require('../common');
+var log = require('../models/internal/log');
 var crypto = require('crypto');
 var router = express.Router();
 
@@ -120,10 +121,18 @@ router.post('/:token/', function (req, res, next) {
                                         data:{}
                                     });
                                 }else{
-                                    res.json({
-                                        success: true,
-                                        message: config.messages.product.addedSuccessfully,
-                                        data:{}
+                                    product_model.lastInsertedId(function(error, result){
+                                        log.save(currentUser, 'product','add', result._id, data,[], function(error){
+                                            if(error){ }else{
+                                                res.json({
+                                                    success: true,
+                                                    message: config.messages.product.addedSuccessfully,
+                                                    data:{
+                                                        result: result
+                                                    }
+                                                });
+                                            }
+                                        });
                                     });
                                 }
                             });
@@ -181,10 +190,14 @@ router.delete('/:token/:product', function (req, res, next) {
                                             data: {}
                                         });
                                     } else {
-                                        res.json({
-                                            success: true,
-                                            message: config.messages.product.deletedSuccessfully,
-                                            data: {}
+                                        log.save(currentUser, 'product','delete', req.params.product, [], docs, function(error){
+                                            if(error){ }else{
+                                                res.json({
+                                                    success: true,
+                                                    message: config.messages.product.deletedSuccessfully,
+                                                    data: {}
+                                                });
+                                            }
                                         });
                                     }
                                 });

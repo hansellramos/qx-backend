@@ -89,6 +89,20 @@ exports.exists = function (reference, cb) {
         });
 }
 
+exports.lastInsertedId = function(cb){
+    db.get()
+        .collection('product')
+        .find({},{_id:1})
+        .sort({_id:-1})
+        .limit(1).toArray(function(error, results){
+        if(results.length>0){
+            cb(error, results[0]);
+        }else{
+            cb(error, results);
+        }
+    });
+}
+
 // Insert new data
 exports.add = function (data, user, cb) {
     sequence_model.getSequence('product', function(error, counter){
