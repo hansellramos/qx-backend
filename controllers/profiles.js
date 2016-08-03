@@ -3,6 +3,7 @@ var profile_model = require('../models/profile');
 var auth_model = require('../models/auth');
 var config = require('../config');
 var common = require('../common');
+var log = require('../models/internal/log');
 var router = express.Router();
 
 /* GET profiles listing. */
@@ -93,10 +94,18 @@ router.post('/:token', function (req, res, next) {
               data:{}
             });
           }else{
-            res.json({
-              success: true,
-              message: config.messages.profile.addedSuccessfully,
-              data:{}
+            profile_model.lastInsertedId(function(error, result){
+              log.save(currentUser, 'profile','add', result._id, data,[], function(error){
+                if(error){ }else{
+                  res.json({
+                    success: true,
+                    message: config.messages.profile.addedSuccessfully,
+                    data:{
+                      result: result
+                    }
+                  });
+                }
+              });
             });
           }
         });
@@ -129,19 +138,44 @@ router.put('/:token/:profile', function (req, res, next) {
           //update flags
           data.modifier = currentUser;
           data.modified = (new Date()).getTime();
-          profile_model.update(req.params.profile, data, currentUser, function (error, result) {
+          profile_model.one(req.params.profile, function (error, docs) {
             if (error) {
               res.status(503).json({
                 success: false,
-                message: config.messages.general.error_500 + error,
+                message: config.messages.general.error_500,
                 data: {}
               });
-            } else {
-              res.json({
-                success: true,
-                message: config.messages.profile.updatedSuccessfully,
-                data: {}
-              });
+            }
+            else {
+              if (docs.length == 0) {
+                res.status(404).json({
+                  success:false,
+                  message:config.messages.profile.nonExistentProfile,
+                  data:{}
+                });
+              } else {
+
+                profile_model.update(req.params.profile, data, currentUser, function (error, result) {
+                  if (error) {
+                    res.status(503).json({
+                      success: false,
+                      message: config.messages.general.error_500 + error,
+                      data: {}
+                    });
+                  } else {
+                    log.save(currentUser, 'profile', 'update', req.params.profile, data, docs, function (error) {
+                      if (error) {
+                      } else {
+                        res.json({
+                          success: true,
+                          message: config.messages.profile.updatedSuccessfully,
+                          data: {}
+                        });
+                      }
+                    });
+                  }
+                });
+              }
             }
           });
         });
@@ -195,10 +229,14 @@ router.delete('/:token/:profile', function (req, res, next) {
                       data: {}
                     });
                   } else {
-                    res.json({
-                      success: true,
-                      message: config.messages.profile.deletedSuccessfully,
-                      data: {}
+                    log.save(currentUser, 'profile','delete', req.params.profile, [], docs, function(error){
+                      if(error){ }else{
+                        res.json({
+                          success: true,
+                          message: config.messages.profile.deletedSuccessfully,
+                          data: {}
+                        });
+                      }
                     });
                   }
                 });
