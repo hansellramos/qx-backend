@@ -1,5 +1,6 @@
 var express = require('express');
 var config = require('../config');
+var log = require('../models/internal/log');
 var auth_model = require('../models/auth');
 var user_model = require('../models/user');
 var sha1 = require('sha1');
@@ -9,7 +10,6 @@ router.post('/:token', function(req, res, next){
     auth_model.authenticate(req.body.username, sha1(req.body.password), function(error, doc){
         if(error){ cb(error);
         }else{
-            console.log(doc);
             if(doc){
                 var token = {
                     user: doc.id
@@ -26,20 +26,24 @@ router.post('/:token', function(req, res, next){
                         });
                     }
                     else{
-                        res.json({
-                            success:true,
-                            message:'',
-                            data:{
-                                token:token.token
-                            }
+                        log.save(token.user, 'auth','login', token.token, token, [], function(error) {
+                            res.json({
+                                success:true,
+                                message:'',
+                                data:{
+                                    token:token.token
+                                }
+                            });
                         });
                     }
                 });
             }else{
-                res.status(401).json({
-                    success:false,
-                    message:config.messages.auth.authenticationFailed,
-                    data:{}
+                log.save(req.body.username, 'auth','loginFailed', '', [], [], function(error) {
+                    res.status(401).json({
+                        success: false,
+                        message: config.messages.auth.authenticationFailed,
+                        data: {}
+                    });
                 });
             }
         }
@@ -89,10 +93,12 @@ router.delete('/:token', function(req, res, next){
                 });
             }else{
                 auth_model.delete(token.token, function(error, user){
-                    res.json({
-                        success:true,
-                        message:config.messages.auth.ses,
-                        data:{}
+                    log.save(token.user, 'auth','logout', token.token, [], token, function(error) {
+                        res.json({
+                            success: true,
+                            message: config.messages.auth.endedTokenSucessfully,
+                            data: {}
+                        });
                     });
                 });
             }
