@@ -150,6 +150,74 @@ router.post('/:token/', function (req, res, next) {
     });
 });
 
+/* PUT product update. */
+router.put('/:token/:product', function (req, res, next) {
+    var productParamValidation = common.validateObjectId(req.params.product);
+    if(!productParamValidation.validation){
+        res.status(417).json({
+            success:false,
+            message:config.messages.product.paramProductInvalid+" "+productParamValidation.message,
+            data:{}
+        });
+    }else{
+        auth_model.verify(req.params.token, function (valid) {
+            if (valid) {
+                var currentUser = valid.user;
+                auth_model.refresh(req.params.token, function () {
+                    var data = req.body;
+                    //update flags
+                    data.modifier = currentUser;
+                    data.modified = (new Date()).getTime();
+                    product_model.one(req.params.product, function (error, docs) {
+                        if (error) {
+                            res.status(503).json({
+                                success: false,
+                                message: config.messages.general.error_500,
+                                data: {}
+                            });
+                        }
+                        else {
+                            if (docs.length == 0) {
+                                res.status(404).json({
+                                    success:false,
+                                    message:config.messages.product.nonExistentProduct,
+                                    data:{}
+                                });
+                            } else {
+                                product_model.update(req.params.product, data, currentUser, function (error, result) {
+                                    if (error) {
+                                        res.status(503).json({
+                                            success: false,
+                                            message: config.messages.general.error_500 + error,
+                                            data: {}
+                                        });
+                                    } else {
+                                        log.save(currentUser, 'product','update', req.params.product, data, docs, function(error){
+                                            if(error){ }else{
+                                                res.json({
+                                                    success: true,
+                                                    message: config.messages.product.updatedSuccessfully,
+                                                    data: {}
+                                                });
+                                            }
+                                        });
+                                    }
+                                });
+                            }
+                        }
+                    });
+                });
+            } else {
+                res.status(404).json({
+                    success: false,
+                    message: config.messages.auth.nonExistentToken,
+                    data: {}
+                });
+            }
+        });
+    }
+});
+
 /* DELETE product elimination. */
 router.delete('/:token/:product', function (req, res, next) {
     var productParamValidation = common.validateObjectId(req.params.product);

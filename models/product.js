@@ -38,7 +38,7 @@ exports.one = function (objectId, cb) {
                     , name: 1, reference: 1, notes:1
                     , max_dose:1, due_date:1, certification_nsf:1
                     , active: 1
-                    , store: { _id: 1, name: 1, reference: 1 }
+                    , store: { _id: 1, id:1, name: 1, reference: 1, subsidiary:1 }
                     , properties: { name: 1, id: 1, validation:1, active:1 }
                     , creator: { _id:1, id:1, firstname:1, lastname:1 }, created:1
                     , modifier: { _id:1, id:1, firstname:1, lastname:1 }, modified:1
@@ -65,7 +65,7 @@ exports.oneById = function (id, cb) {
                     , name: 1, reference: 1, notes:1
                     , max_dose:1, due_date:1, certification_nsf:1
                     , active: 1
-                    , store: { _id: 1, name: 1, reference: 1 }
+                    , store: { _id: 1, id:1, name: 1, reference: 1, subsidiary:1 }
                     , properties: { name: 1, id: 1, validation:1, active:1 }
                     , creator: { _id:1, id:1, firstname:1, lastname:1 }, created:1
                     , modifier: { _id:1, id:1, firstname:1, lastname:1 }, modified:1
@@ -132,6 +132,18 @@ exports.add = function (data, user, cb) {
                 });
         }
     });
+}
+
+// Update existent data
+exports.update = function (objectId, data, user, cb) {
+    db.get()
+        .collection('product').findOneAndUpdate(
+        { _id: new ObjectID(objectId) },
+        { $set: data }
+        , function(error, result){
+            cb(error, result);
+        }
+    );
 }
 
 //delete data
