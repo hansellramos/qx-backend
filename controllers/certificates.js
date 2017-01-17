@@ -11,8 +11,8 @@ router.get('/:token', function (req, res, next) {
     auth_model.verify(req.params.token, function(valid){
         if(valid){
             auth_model.refresh(req.params.token, function(){
-                //if all query parameter is equal to true, retrieve all data, else only last 365 days info
-                var from = req.query.all ? 0 : new Date().getTime() - (365*24*3600*1000);
+                //if all query parameter is equal to true, retrieve all data, else only last 188 days info
+                var from = req.query.all ? 0 : new Date().getTime() - (188*24*3600*1000);
                 certificate_model.all(from, function(error, result){
                     if(error){
                         res.status(503).json({
