@@ -4,11 +4,11 @@ var sequence_model = require('./internal/sequence');
 var crypto = require('crypto');
 var config = require('../config');
 
-exports.all = function (cb) {
+exports.all = function (from, cb) {
     var items = [];
     db.get()
         .collection('certificate').aggregate([
-            { $match: {deleted: false, id: { $gt: 0 } } }
+            { $match: {deleted: false, id: { $gt: 0 }, elaboration_date: { $gt: from} } }
             , { $lookup: { from: 'product' , localField: 'product' , foreignField: 'id' , as: 'product' } }
             , { $lookup: { from: 'external' , localField: 'customer' , foreignField: 'id' , as: 'customer' } }
             , { $lookup: { from: 'user' , localField: 'creator' , foreignField: 'id' , as: 'creator' } }
