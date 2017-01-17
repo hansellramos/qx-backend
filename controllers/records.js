@@ -131,7 +131,7 @@ router.post('/:token/:product', function (req, res, next) {
             auth_model.refresh(req.params.token, function(){
                 var data = req.body;
                 data.properties = completeProperties(data.properties, currentUser);
-                record_model.exists(data.reference, function(error, docs){
+                record_model.exists(data.reference, data.product, function(error, docs){
                     if(error){
                         res.status(503).json({
                             success:false,

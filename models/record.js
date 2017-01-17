@@ -89,10 +89,10 @@ exports.oneByReference = function (reference, cb) {
 }
 
 //verify if exists an object with the same reference
-exports.exists = function (reference, cb) {
+exports.exists = function (reference, product, cb) {
     db.get()
         .collection('record').find(
-            { reference: reference, deleted:false }
+            { reference: reference, deleted:false, product:product }
         ).limit(1)
         .toArray(function (err, docs) {
             cb(err, docs);
