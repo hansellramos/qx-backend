@@ -18,7 +18,7 @@ exports.all = function (product, cb) {
                     , analysis_date: 1, elaboration_date: 1, due_date: 1, reception_date: 1
                     , remission: 1
                     , quantity: 1,existing_quantity: 1
-                    , satisfies: 1, veredict: 1
+                    , satisfies: 1, veredict: 1, notes:1
                     , active: 1
                 }
             }
@@ -46,7 +46,7 @@ exports.one = function (objectId, cb) {
                     , remission: 1
                     , clause: 1
                     , quantity: 1,existing_quantity: 1
-                    , satisfies: 1, veredict: 1
+                    , satisfies: 1, veredict: 1, notes:1
                     , active: 1
                     , creator: { _id:1, id:1, firstname:1, lastname:1 }, created:1
                     , modifier: { _id:1, id:1, firstname:1, lastname:1 }, modified:1
@@ -93,7 +93,7 @@ exports.exists = function (reference, product, cb) {
     db.get()
         .collection('record').find(
             { reference: reference, deleted:false, product:product }
-        ).limit(1)
+        ).limit(2)
         .toArray(function (err, docs) {
             cb(err, docs);
         });
@@ -149,6 +149,36 @@ exports.add = function (data, user, cb) {
                 });
         }
     });
+}
+
+// Update existent data
+exports.update = function (objectId, data, user, cb) {
+    db.get()
+        .collection('record').findOneAndUpdate(
+        { _id: new ObjectID(objectId) }
+        , { $set: data }
+        , function(error, result){
+            cb(error, result);
+        }
+    );
+}
+
+exports.parsePropertiesChanges = function(newData, oldData, user){
+    if(newData.properties){
+        for(var p = 0; p < newData.properties.length; p++){
+            var property = newData.properties[p];
+            for(var rp = 0; rp < oldData.properties.length; rp++){
+                var recordProperty = oldData.properties[rp];
+                if(property.property == recordProperty.property) {
+                    recordProperty.value = property.value;
+                    recordProperty.modified = new Date().getTime();
+                    recordProperty.modifier = user;
+                }
+            }
+        }
+        newData.properties = oldData.properties;
+    }
+    return newData;
 }
 
 //delete data

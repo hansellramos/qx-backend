@@ -192,6 +192,105 @@ router.post('/:token/:product', function (req, res, next) {
     });
 });
 
+/* POST record update. */
+router.put('/:token/:record', function (req, res, next) {
+    var recordParamValidation = common.validateObjectId(req.params.record);
+    if(!recordParamValidation.validation){
+        res.status(417).json({
+            success:false,
+            message:config.messages.record.paramRecordInvalid+" "+recordParamValidation.message,
+            data:{}
+        });
+    }else {
+        auth_model.verify(req.params.token, function (valid) {
+            if (valid) {
+                var currentUser = valid.user;
+                auth_model.refresh(req.params.token, function () {
+                    var data = req.body;
+                    //update flags
+                    data.modifier = currentUser;
+                    data.modified = (new Date()).getTime();
+                    record_model.one(req.params.record, function (error, docs) {
+                        if (error) {
+                            res.status(503).json({
+                                success: false,
+                                message: config.messages.general.error_500,
+                                data: {}
+                            });
+                        }
+                        else {
+                            if (docs.length == 0) {
+                                res.status(404).json({
+                                    success:false,
+                                    message:config.messages.record.nonExistentRecord,
+                                    data:{}
+                                });
+                            } else {
+                                if(!data.reference){
+                                    data.reference = docs.reference;
+                                }
+                                data.reference = data.reference.trim();
+                                console.log({ reference: data.reference, deleted:false, product: docs.product[0].id });
+                                record_model.exists(data.reference, docs.product[0].id, function(error, records){
+                                    if(error){
+
+                                    }else {
+                                        if (
+                                            (data.reference != docs.reference && records.length > 0) //if reference was changed
+                                            || (data.reference == docs.reference && records.length > 1) //if reference has no changed
+                                        ){
+                                            res.status(406).json({
+                                                success:false,
+                                                message:config.messages.record.notSaved,
+                                                data:{
+                                                    fields: {
+                                                        reference: {
+                                                            error: true,
+                                                            message: config.messages.record.referenceExists,
+                                                            value: data.reference
+                                                        }
+                                                    }
+                                                }
+                                            });
+                                        }else{
+                                            record_model.update(req.params.record, record_model.parsePropertiesChanges(data, docs, currentUser), currentUser, function (error, result) {
+                                                if (error) {
+                                                    res.status(503).json({
+                                                        success: false,
+                                                        message: config.messages.general.error_500 + error,
+                                                        data: {}
+                                                    });
+                                                } else {
+                                                    log.save(currentUser, 'record', 'update', req.params.record, data, docs, function (error) {
+                                                        if (error) {
+                                                        } else {
+                                                            res.json({
+                                                                success: true,
+                                                                message: config.messages.record.updatedSuccessfully,
+                                                                data: {}
+                                                            });
+                                                        }
+                                                    });
+                                                }
+                                            });
+                                        }
+                                    }
+                                });
+                            }
+                        }
+                    });
+                });
+            } else {
+                res.status(404).json({
+                    success: false,
+                    message: config.messages.auth.nonExistentToken,
+                    data: {}
+                });
+            }
+        });
+    }
+});
+
 /* DELETE record elimination. */
 router.delete('/:token/:record', function (req, res, next) {
     var recordParamValidation = common.validateObjectId(req.params.record);
