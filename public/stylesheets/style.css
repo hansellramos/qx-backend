@@ -1,6 +1,13 @@
 body {
-  padding: 50px;
-  font: 14px "Lucida Grande", Helvetica, Arial, sans-serif;
+  padding: 5px;
+  font-size: 14px;
+  font-family: "Roboto", "Helvetica Neue", Helvetica, Arial, sans-serif;
+}
+
+h2 {
+  font-size: 30px;
+  font-weight: 500;
+  line-height: 1.1;
 }
 
 a {
