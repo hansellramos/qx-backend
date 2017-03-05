@@ -7,6 +7,7 @@ module.exports = {
             error_500: 'Disculpenos, ha ocurrido  un error interno, por favor intenta nuevamente en unos momentos.'
         }
         , auth: {
+            usernameNotFound: 'No existe ese usuario.',
             authenticationFailed: 'Con los datos proporcionados no ha sido posible identificarte, por favor verifica e intenta de nuevo.',
             authenticationIncomplete: 'Disculpenos, no ha sido posible finalizar el proceso de identificación, por favor intente nuevamente en unos momentos.',
             nonExistentToken: 'El token proporcionado no existe, por favor verifique e intente nuevamente.',

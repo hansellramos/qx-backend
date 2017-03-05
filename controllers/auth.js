@@ -7,47 +7,69 @@ var sha1 = require('sha1');
 var router = express.Router();
 
 router.post('/:token', function(req, res, next){
-    auth_model.authenticate(req.body.username, sha1(req.body.password), function(error, doc){
+    user_model.oneByUsername(req.body.username, function(error, doc){
         if(error){ cb(error);
         }else{
             if(doc){
-                var token = {
-                    user: doc.id
-                    , iat: (new Date()).getTime()
-                    , expires: (new Date()).getTime() + config.sessionTimelife
-                };
-                token.token = auth_model.generate(auth_model.complete(token));
-                auth_model.insert(token, function(error){
-                    if(error){
-                        res.status(503).json({
-                            success:false,
-                            message:config.messages.auth.authenticationIncomplete,
-                            data:{}
-                        });
-                    }
-                    else{
-                        log.save(token.user, 'auth','login', token.token, token, [], function(error) {
-                            res.json({
-                                success:true,
-                                message:'',
-                                data:{
-                                    token:token.token
+                var password = '';
+                if(doc.passwordLastUpdate){
+                    var salt = doc.password.substr(41,32);
+                    password = sha1(config.secret+req.body.password+salt)+":"+salt+"==";
+                }else{
+                    password = sha1(req.body.password);
+                }
+                auth_model.authenticate(req.body.username, password, function(error, doc){
+                    if(error){ cb(error);
+                    }else{
+                        if(doc){
+                            var token = {
+                                user: doc.id
+                                , iat: (new Date()).getTime()
+                                , expires: (new Date()).getTime() + config.sessionTimelife
+                            };
+                            token.token = auth_model.generate(auth_model.complete(token));
+                            auth_model.insert(token, function(error){
+                                if(error){
+                                    res.status(503).json({
+                                        success:false,
+                                        message:config.messages.auth.authenticationIncomplete,
+                                        data:{}
+                                    });
+                                }
+                                else{
+                                    log.save(token.user, 'auth','login', token.token, token, [], function(error) {
+                                        res.json({
+                                            success:true,
+                                            message:'',
+                                            data:{
+                                                token:token.token
+                                            }
+                                        });
+                                    });
                                 }
                             });
-                        });
+                        }else{
+                            log.save(req.body.username, 'auth','loginFailed', '', [], [], function(error) {
+                                res.status(401).json({
+                                    success: false,
+                                    message: config.messages.auth.authenticationFailed,
+                                    data: {}
+                                });
+                            });
+                        }
                     }
                 });
             }else{
                 log.save(req.body.username, 'auth','loginFailed', '', [], [], function(error) {
-                    res.status(401).json({
+                    res.status(404).json({
                         success: false,
-                        message: config.messages.auth.authenticationFailed,
+                        message: config.messages.auth.usernameNotFound,
                         data: {}
                     });
                 });
             }
         }
-    })
+    });
 });
 
 router.get('/:token', function(req, res, next){

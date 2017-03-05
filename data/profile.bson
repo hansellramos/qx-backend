@@ -1,4 +1,0 @@
-{"_id":{"$oid":"573e2c7cc39236b575489ded"},"id":3,"name":"Analista","description":"Son las personas que ingresan los registros de cal"}
-{"_id":{"$oid":"573e2c7cc39236b575489dee"},"id":1,"name":"DBA","description":"Es el administrador de toda la aplicacion"}
-{"_id":{"$oid":"573e2c7cc39236b575489def"},"id":2,"name":"Administrador","description":"Administrador de los usuarios de la aplicacion"}
-{"_id":{"$oid":"573e2c7cc39236b575489df0"},"id":4,"name":"Despachador","description":"Son las personas que imprimen los certificados de"}

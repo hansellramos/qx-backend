@@ -51,27 +51,53 @@ exports.one = function (objectId, cb) {
 exports.oneById = function (id, cb) {
     db.get()
         .collection('user').aggregate([
-            { $match: {id: id} }
-            , { $limit: 1 }
-            , { $lookup: { from: 'profile', localField: 'profile', foreignField: 'id', as: 'profile' } }
-            , { $lookup: { from: 'user', localField: 'creator', foreignField: 'id', as: 'creator'} }
-            , { $lookup: { from: 'user', localField: 'modifier', foreignField: 'id', as: 'modifier'} }
-            , { $lookup: { from: 'user', localField: 'deleter', foreignField: 'id', as: 'deleter'} }
-            , {
-                $project: {
-                    id:1, username:1,
-                    firstname:1, lastname:1,email:1,
-                    allData:1, isAdmin:1,
-                    active:1,
-                    profile: { _id:1, id:1, name:1, permissions:1 }
-                    , creator: { _id:1, id:1, firstname:1, lastname:1 }, created:1
-                    , modifier: { _id:1, id:1, firstname:1, lastname:1 }, modified:1
-                    , deleter: { _id:1, id:1, firstname:1, lastname:1 }, deleted:1
-                }
+        { $match: {id: id} }
+        , { $limit: 1 }
+        , { $lookup: { from: 'profile', localField: 'profile', foreignField: 'id', as: 'profile' } }
+        , { $lookup: { from: 'user', localField: 'creator', foreignField: 'id', as: 'creator'} }
+        , { $lookup: { from: 'user', localField: 'modifier', foreignField: 'id', as: 'modifier'} }
+        , { $lookup: { from: 'user', localField: 'deleter', foreignField: 'id', as: 'deleter'} }
+        , {
+            $project: {
+                id:1, username:1,
+                firstname:1, lastname:1,email:1,
+                allData:1, isAdmin:1,
+                active:1,
+                profile: { _id:1, id:1, name:1, permissions:1 }
+                , creator: { _id:1, id:1, firstname:1, lastname:1 }, created:1
+                , modifier: { _id:1, id:1, firstname:1, lastname:1 }, modified:1
+                , deleter: { _id:1, id:1, firstname:1, lastname:1 }, deleted:1
             }
-        ]).toArray(function (err, docs) {
-            cb(err, docs.length > 0 ? docs[0] : docs);
-        });
+        }
+    ]).toArray(function (err, docs) {
+        cb(err, docs.length > 0 ? docs[0] : docs);
+    });
+}
+
+exports.oneByUsername = function (username, cb) {
+    db.get()
+        .collection('user').aggregate([
+        { $match: {username: username} }
+        , { $limit: 1 }
+        , { $lookup: { from: 'profile', localField: 'profile', foreignField: 'id', as: 'profile' } }
+        , { $lookup: { from: 'user', localField: 'creator', foreignField: 'id', as: 'creator'} }
+        , { $lookup: { from: 'user', localField: 'modifier', foreignField: 'id', as: 'modifier'} }
+        , { $lookup: { from: 'user', localField: 'deleter', foreignField: 'id', as: 'deleter'} }
+        , {
+            $project: {
+                id:1, username:1,
+                firstname:1, lastname:1,email:1, passwordLastUpdate:1, password:1,
+                allData:1, isAdmin:1,
+                active:1,
+                profile: { _id:1, id:1, name:1, permissions:1 }
+                , creator: { _id:1, id:1, firstname:1, lastname:1 }, created:1
+                , modifier: { _id:1, id:1, firstname:1, lastname:1 }, modified:1
+                , deleter: { _id:1, id:1, firstname:1, lastname:1 }, deleted:1
+            }
+        }
+    ]).toArray(function (err, docs) {
+        cb(err, docs.length > 0 ? docs[0] : docs);
+    });
 }
 
 //verify if exists an object with the same username
@@ -110,7 +136,7 @@ exports.add = function (data, user, cb) {
                 .collection('user').insertOne({
                     id: counter.value.seq
                     , username: data.username
-                    , password: sha1(data.password)
+                    , password: sha1(config.secret+data.password+common.makeSalt())
                     , firstname: data.firstname
                     , lastname: data.lastname
                     , email: data.email
