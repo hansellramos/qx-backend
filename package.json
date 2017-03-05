@@ -1,8 +1,10 @@
 {
   "name": "qx-backend",
-  "version": "0.0.0",
+  "version": "0.8.0",
+  "release": "0077",
   "private": true,
-  "description": "\"Qualitrix PQP - Backend\"",
+  "description": "Developed for Productos Químicos Panamericanos S.A.",
+  "lastUpdateDate": "March 4th/2017",
   "main": "index.js",
   "scripts": {
     "start": "node ./bin/www"
