@@ -41,7 +41,7 @@ router.put('/:token', function (req, res, next) {
                                     var salt = doc.password.substr(41,32);
                                     password = common.generatePassword(data.old,salt);
                                 }else{
-                                    password = sha1(req.body.password);
+                                    password = sha1(data.old);
                                 }
                                 if(password != doc.password){
                                     res.status(406).json({
