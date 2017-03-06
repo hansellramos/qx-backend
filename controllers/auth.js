@@ -5,6 +5,7 @@ var auth_model = require('../models/auth');
 var user_model = require('../models/user');
 var sha1 = require('sha1');
 var router = express.Router();
+var common = require('../common');
 
 router.post('/:token', function(req, res, next){
     user_model.oneByUsername(req.body.username, function(error, doc){
@@ -14,7 +15,7 @@ router.post('/:token', function(req, res, next){
                 var password = '';
                 if(doc.passwordLastUpdate){
                     var salt = doc.password.substr(41,32);
-                    password = sha1(config.secret+req.body.password+salt)+":"+salt+"==";
+                    password = common.generatePassword(req.body.password,salt);
                 }else{
                     password = sha1(req.body.password);
                 }

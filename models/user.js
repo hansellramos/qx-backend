@@ -2,6 +2,7 @@ var db = require('../db');
 var ObjectID = require('mongodb').ObjectID;
 var sequence_model = require('./internal/sequence');
 var sha1 = require('sha1');
+var common = require('../common');
 
 exports.all = function (cb) {
     db.get()
@@ -136,7 +137,7 @@ exports.add = function (data, user, cb) {
                 .collection('user').insertOne({
                     id: counter.value.seq
                     , username: data.username
-                    , password: sha1(config.secret+data.password+common.makeSalt())
+                    , password: common.generatePassword(data.password, common.makeSalt())
                     , firstname: data.firstname
                     , lastname: data.lastname
                     , email: data.email
@@ -159,8 +160,10 @@ exports.add = function (data, user, cb) {
 // Update existent data
 exports.update = function (objectId, data, user, cb) {
     if(data.password){
-        data.password = sha1(data.password);
+        data.password = common.generatePassword(data.password, common.makeSalt());
+        data.passwordLastUpdate = (new Date()).getTime()
     }
+    console.log(data.password);
     db.get()
         .collection('user').findOneAndUpdate(
         { _id: new ObjectID(objectId) },

@@ -16,6 +16,7 @@ var products = require('./controllers/products');
 var records = require('./controllers/records');
 var certificates = require('./controllers/certificates');
 var externals = require('./controllers/externals');
+var password = require('./controllers/password');
 
 var app = express();
 
@@ -40,6 +41,7 @@ app.use(function(req, res, next) {
 app.use('/', routes);
 app.use('/auth', auth);
 app.use('/users', users);
+app.use('/password', password);
 app.use('/profiles', profiles);
 app.use('/permissions', permissions);
 app.use('/subsidiaries', subsidiaries);
