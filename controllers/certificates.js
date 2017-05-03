@@ -81,6 +81,32 @@ router.get('/:token/:certificate', function (req, res, next) {
     }
 });
 
+/* GET Validate Certificate */
+router.get('/validate/:id/:validation', function (req, res, next) {
+    setTimeout(function(){
+        certificate_model.validate(req.params.id, req.params.validation, function(error, result){
+            if(error){
+                res.status(503).json({
+                    success:false,
+                    message:config.messages.general.error_500,
+                    data:{}
+                });
+            }
+            else {
+                if(result==null || result.length === 0){
+                    res.status(404).json({
+                        success:false,
+                        message:config.messages.certificate.nonExistentCertificate,
+                        data:{}
+                    });
+                }else{
+                    res.json(result);
+                }
+            }
+        });
+    }, 1000);
+});
+
 /* POST certificates creation. */
 router.post('/:token', function (req, res, next) {
     auth_model.verify(req.params.token, function(valid){

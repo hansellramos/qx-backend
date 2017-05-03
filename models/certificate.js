@@ -98,6 +98,37 @@ exports.oneById = function (id, cb) {
         });
 }
 
+exports.validate = function (id, verification, cb) {
+    console.log([id, verification]);
+    db.get()
+        .collection('certificate').aggregate([
+        { $match: { id: parseInt(id), verification: verification } }
+        , { $limit: 1 }
+        , { $lookup: { from: 'product' , localField: 'product' , foreignField: 'id' , as: 'product' } }
+        , { $lookup: { from: 'external' , localField: 'customer' , foreignField: 'id' , as: 'customer' } }
+        , { $lookup: { from: 'user', localField: 'creator', foreignField: 'id', as: 'creator'} }
+        , { $lookup: { from: 'user', localField: 'modifier', foreignField: 'id', as: 'modifier'} }
+        , { $lookup: { from: 'user', localField: 'deleter', foreignField: 'id', as: 'deleter'} }
+        , {
+            $project: {
+                id: 1,remission: 1,
+                quantity: 1,presentation: 1,date: 1,
+                active: 1, verification: 1, max_dose: 1, due_date:1, elaboration_date:1
+                , leader:1, clause: 1,
+                product: { _id: 1, id: 1, name: 1, reference: 1 },
+                customer: { _id: 1, id: 1, name: 1 },
+                properties: 1, values: 1
+                , creator: { _id:1, id:1, firstname:1, lastname:1 }, created:1
+                , modifier: { _id:1, id:1, firstname:1, lastname:1 }, modified:1
+                , deleter: { _id:1, id:1, firstname:1, lastname:1 }, deleted:1
+            }
+        }
+    ])
+        .toArray(function (err, docs) {
+            cb(err, docs.length > 0 ? docs[0] : docs);
+        });
+}
+
 exports.lastInsertedId = function(cb){
     db.get()
         .collection('certificate')

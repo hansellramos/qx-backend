@@ -1,10 +1,10 @@
 {
   "name": "qx-backend",
-  "version": "1.0.0",
-  "release": "0087",
+  "version": "1.0.1",
+  "release": "0088",
   "private": true,
   "description": "Developed for Productos Químicos Panamericanos S.A.",
-  "lastUpdateDate": "May 2nd/2017",
+  "lastUpdateDate": "May 3  nd/2017",
   "main": "index.js",
   "scripts": {
     "start": "node ./bin/www"
