@@ -6,6 +6,7 @@ var common = require('../common');
 var log = require('../models/internal/log');
 var crypto = require('crypto');
 var router = express.Router();
+var sha1 = require('sha1');
 
 /* GET product listing. */
 router.get('/:token', function (req, res, next) {
@@ -184,6 +185,10 @@ router.put('/:token/:product', function (req, res, next) {
                                     data:{}
                                 });
                             } else {
+                                //////
+                                if(data.properties){
+                                    data.properties = parseProductProperties(data.modifier, data.modified, docs.properties, data.properties);
+                                }
                                 product_model.update(req.params.product, data, currentUser, function (error, result) {
                                     if (error) {
                                         res.status(503).json({
@@ -203,6 +208,7 @@ router.put('/:token/:product', function (req, res, next) {
                                         });
                                     }
                                 });
+                                /////
                             }
                         }
                     });
@@ -217,6 +223,48 @@ router.put('/:token/:product', function (req, res, next) {
         });
     }
 });
+
+function parseProductProperties(modifier, modified, oldProperties, newProperties) {
+    var properties = [];
+    for(var n in newProperties){
+        var newProperty = newProperties[n];
+        var p = {
+            id: newProperty.id ? newProperty.id : ''
+            , name: newProperty.name
+            , validation: newProperty.validation
+            , active: newProperty.active
+        };
+
+        if(newProperty.remission_editable){
+            p.remission_editable = newProperty.remission_editable;
+        }
+
+        if(newProperty.status == 'added' || p.id === ''){
+            p.id = sha1(JSON.stringify(p));
+            p.created = modified;
+            p.creator = modifier;
+            newProperty.status = 'updated';
+        }else{
+            p.created = modified;
+            p.created = modifier;
+        }
+
+        if(newProperty.status === 'updated'){
+            p.modified = modified;
+            p.modifier = modifier;
+        }
+
+        if(newProperty.deleted === true){
+            p.deleted = modified;
+            p.deleter = modifier;
+        }else{
+            p.deleted = p.deleter = false;
+        }
+
+        properties.push(p);
+    }
+    return properties;
+}
 
 /* DELETE product elimination. */
 router.delete('/:token/:product', function (req, res, next) {

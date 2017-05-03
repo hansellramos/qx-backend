@@ -39,7 +39,7 @@ exports.one = function (objectId, cb) {
                     , max_dose:1, due_date:1, certification_nsf:1
                     , active: 1
                     , store: { _id: 1, id:1, name: 1, reference: 1, subsidiary:1 }
-                    , properties: { name: 1, id: 1, validation:1, active:1 }
+                    , properties: { name: 1, id: 1, validation:1, active:1, deleted:1 }
                     , creator: { _id:1, id:1, firstname:1, lastname:1 }, created:1
                     , modifier: { _id:1, id:1, firstname:1, lastname:1 }, modified:1
                     , deleter: { _id:1, id:1, firstname:1, lastname:1 }, deleted:1
