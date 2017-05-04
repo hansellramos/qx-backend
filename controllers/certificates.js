@@ -37,48 +37,29 @@ router.get('/:token', function (req, res, next) {
 });
 
 /* GET one certificate. */
-router.get('/:token/:certificate', function (req, res, next) {
-    var certificateParamValidation = common.validateObjectId(req.params.certificate);
-    if(!certificateParamValidation.validation){
-        res.status(417).json({
-            success:false,
-            message:config.messages.certificate.paramCertificateInvalid+" "+certificateParamValidation.message,
-            data:{}
-        });
-    }else{
-        auth_model.verify(req.params.token, function(valid){
-            if(valid){
-                auth_model.refresh(req.params.token, function(){
-                    certificate_model.one(req.params.certificate, function(error, result){
-                        if(error){
-                            res.status(503).json({
-                                success:false,
-                                message:config.messages.general.error_500,
-                                data:{}
-                            });
-                        }
-                        else {
-                            if(result==null){
-                                res.status(404).json({
-                                    success:false,
-                                    message:config.messages.certificate.nonExistentCertificate,
-                                    data:{}
-                                });
-                            }else{
-                                res.json(result);
-                            }
-                        }
-                    });
-                });
-            }else{
-                res.status(404).json({
+router.get('/-/:certificate', function (req, res, next) {
+    setTimeout(function(){
+        certificate_model.one(req.params.certificate, function(error, result){
+            if(error){
+                res.status(503).json({
                     success:false,
-                    message:config.messages.auth.nonExistentToken,
+                    message:config.messages.general.error_500,
                     data:{}
                 });
             }
+            else {
+                if(result==null){
+                    res.status(404).json({
+                        success:false,
+                        message:config.messages.certificate.nonExistentCertificate,
+                        data:{}
+                    });
+                }else{
+                    res.json(result);
+                }
+            }
         });
-    }
+    }, 1000);
 });
 
 /* GET Validate Certificate */
