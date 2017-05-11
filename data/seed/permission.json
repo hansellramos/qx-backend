@@ -1,0 +1,33 @@
+{"_id":{"$oid":"57a2335ada45a6d40bc2ce00"},"name":"External List","reference":"externalList","description":"Permite listar los diferentes proveedores/clientes en el sistema","type":"module"}
+{"_id":{"$oid":"57a2335ada45a6d40bc2ce02"},"name":"Certificate List","reference":"certificateList","description":"Permite listar los diferentes certificados en el sistema","type":"module"}
+{"_id":{"$oid":"57a2335ada45a6d40bc2ce06"},"name":"Store Creation","reference":"storeCreate","description":"Permite crear bodegas en el sistema","type":"module"}
+{"_id":{"$oid":"57a2335ada45a6d40bc2ce0a"},"name":"Certificate Creation","reference":"certificateCreate","description":"Permite crear certificados en el sistema","type":"module"}
+{"_id":{"$oid":"57a2335ada45a6d40bc2ce0e"},"name":"Store Update","reference":"storeUpdate","description":"Permite modificar bodegas en el sistema","type":"module"}
+{"_id":{"$oid":"57a2335ada45a6d40bc2ce12"},"name":"User Update","reference":"userUpdate","description":"Permite modificar usuarios en el sistema","type":"module"}
+{"_id":{"$oid":"57a2335ada45a6d40bc2ce14"},"name":"Subsidiary Deletion","reference":"subsidiaryDelete","description":"Permite eliminar sucursales en el sistema","type":"module"}
+{"_id":{"$oid":"57a2335ada45a6d40bc2ce16"},"name":"Product Deletion","reference":"productDelete","description":"Permite eliminar productos en el sistema","type":"module"}
+{"_id":{"$oid":"57a2335ada45a6d40bc2ce19"},"name":"Certificate Deletion","reference":"certificateDelete","description":"Permite eliminar certificados en el sistema","type":"module"}
+{"_id":{"$oid":"57a2335ada45a6d40bc2cdfd"},"name":"Subsidiary List","reference":"subsidiaryList","description":"Permite listar las diferentes sucursales en el sistema","type":"module"}
+{"_id":{"$oid":"57a2335ada45a6d40bc2ce01"},"name":"Record List","reference":"recordList","description":"Permite listar las diferentes muestras en el sistema","type":"module"}
+{"_id":{"$oid":"57a2335ada45a6d40bc2ce05"},"name":"Subsidiary Creation","reference":"subsidiaryCreate","description":"Permite crear sucursales en el sistema","type":"module"}
+{"_id":{"$oid":"57a2335ada45a6d40bc2ce08"},"name":"External Creation","reference":"externalCreate","description":"Permite crear proveedores/clientes en el sistema","type":"module"}
+{"_id":{"$oid":"57a2335ada45a6d40bc2ce0d"},"name":"Subsidiary Update","reference":"subsidiaryUpdate","description":"Permite modificar sucursales en el sistema","type":"module"}
+{"_id":{"$oid":"57a2335ada45a6d40bc2ce11"},"name":"Record Update","reference":"recordUpdate","description":"Permite modificar muestras en el sistema","type":"module"}
+{"_id":{"$oid":"57a2335ada45a6d40bc2ce1a"},"name":"User Deletion","reference":"userDelete","description":"Permite eliminar usuarios en el sistema","type":"module"}
+{"_id":{"$oid":"57a2335ada45a6d40bc2cdfe"},"name":"Store List","reference":"storeList","description":"Permite listar las diferentes bodegas en el sistema","type":"module"}
+{"_id":{"$oid":"57a2335ada45a6d40bc2ce04"},"name":"Profile List","reference":"profileList","description":"Permite listar los diferentes perfiles en el sistema","type":"module"}
+{"_id":{"$oid":"57a2335ada45a6d40bc2ce09"},"name":"Record Creation","reference":"recordCreate","description":"Permite crear muestras en el sistema","type":"module"}
+{"_id":{"$oid":"57a2335ada45a6d40bc2ce0c"},"name":"Profile Creation","reference":"profileCreate","description":"Permite crear perfiles en el sistema","type":"module"}
+{"_id":{"$oid":"57a2335ada45a6d40bc2ce10"},"name":"External Update","reference":"externalUpdate","description":"Permite modificar proveedores/clientes en el sistema","type":"module"}
+{"_id":{"$oid":"57a2335ada45a6d40bc2ce13"},"name":"Profile Update","reference":"profileUpdate","description":"Permite modificar perfiles en el sistema","type":"module"}
+{"_id":{"$oid":"57a2335ada45a6d40bc2ce15"},"name":"Store Deletion","reference":"storeDelete","description":"Permite eliminar bodegas en el sistema","type":"module"}
+{"_id":{"$oid":"57a2335ada45a6d40bc2ce17"},"name":"External Deletion","reference":"externalDelete","description":"Permite eliminar proveedores/clientes en el sistema","type":"module"}
+{"_id":{"$oid":"57a2335ada45a6d40bc2ce1b"},"name":"Profile Deletion","reference":"profileDelete","description":"Permite eliminar perfiles en el sistema","type":"module"}
+{"_id":{"$oid":"57a2335ada45a6d40bc2cdff"},"name":"Product List","reference":"productList","description":"Permite listar los diferentes productos en el sistema","type":"module"}
+{"_id":{"$oid":"57a2335ada45a6d40bc2ce03"},"name":"User List","reference":"userList","description":"Permite listar los diferentes usuarios en el sistema","type":"module"}
+{"_id":{"$oid":"57a2335ada45a6d40bc2ce07"},"name":"Product Creation","reference":"productCreate","description":"Permite crear productos en el sistema","type":"module"}
+{"_id":{"$oid":"57a2335ada45a6d40bc2ce0b"},"name":"User Creation","reference":"userCreate","description":"Permite crear usuarios en el sistema","type":"module"}
+{"_id":{"$oid":"57a2335ada45a6d40bc2ce0f"},"name":"Product Update","reference":"productUpdate","description":"Permite modificar productos en el sistema","type":"module"}
+{"_id":{"$oid":"57a2335ada45a6d40bc2ce18"},"name":"Record Deletion","reference":"recordDelete","description":"Permite eliminar muestras en el sistema","type":"module"}
+{"_id":{"$oid":"57a2335ada45a6d40bc2ce1c"},"name":"Users reset password","reference":"userResetPassword","description":"Permite reiniciar la clave de los usuarios en el sistema","type":"property"}
+{"_id":{"$oid":"5914c19b2e41372f62353cac"},"name":"Record Update Quantity","reference":"recordEditQuantity","description":"Permite modificar la cantidad existente de un lote","type":"property"}
