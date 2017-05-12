@@ -43,7 +43,7 @@ exports.one = function (objectId, cb) {
                     id:1, reference:1, active: 1
                     , supplier:1, product:1, properties:1
                     , analysis_date: 1, elaboration_date: 1, due_date: 1, reception_date: 1
-                    , remission: 1
+                    , remission: 1, certificates: 1
                     , clause: 1
                     , quantity: 1,existing_quantity: 1
                     , satisfies: 1, veredict: 1, notes:1
@@ -73,7 +73,7 @@ exports.oneByReference = function (reference, cb) {
                     id:1, reference:1, active: 1
                     , supplier:1, product:1, properties:1
                     , analysis_date: 1, elaboration_date: 1, due_date: 1, reception_date: 1
-                    , remission: 1
+                    , remission: 1, certificates: 1
                     , clause: 1
                     , quantity: 1,existing_quantity: 1
                     , satisfies: 1, veredict: 1

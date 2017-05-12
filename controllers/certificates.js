@@ -1,5 +1,6 @@
 var express = require('express');
 var certificate_model = require('../models/certificate');
+var record_model = require('../models/record');
 var auth_model = require('../models/auth');
 var config = require('../config');
 var common = require('../common');
@@ -106,12 +107,14 @@ router.post('/:token', function (req, res, next) {
                         certificate_model.lastInsertedId(function(error, result){
                             log.save(currentUser, 'certificate','add', result._id, data,[], function(error){
                                 if(error){ }else{
-                                    res.json({
-                                        success: true,
-                                        message: config.messages.certificate.addedSuccessfully,
-                                        data:{
-                                            result: result
-                                        }
+                                    updateRecords(data.records, 0, result.id, currentUser, function(){
+                                        res.json({
+                                            success: true,
+                                            message: config.messages.certificate.addedSuccessfully,
+                                            data:{
+                                                result: result
+                                            }
+                                        });
                                     });
                                 }
                             });
@@ -128,6 +131,38 @@ router.post('/:token', function (req, res, next) {
         }
     });
 });
+
+function updateRecords(records, index, certificate, user, cb){
+    if(index >= records.length){
+        cb();
+    }else{
+        record_model.one(records[index]._id, function(error, record){
+            if(error){ cb(); }
+            else{
+                var c = [];
+                console.log(record);
+                if(typeof record.certificates !== 'undefined'){
+                    c = record.certificates;
+                }
+                console.log(c);
+                c.push({
+                    'id': certificate
+                    , quantity: records[index].quantity
+                });
+                console.log(c);
+                var data = {
+                    'certificates': c
+                    , 'existing_quantity': record.existing_quantity - records[index].quantity
+                };
+                record_model.update(record._id
+                    , data
+                    , user
+                    , function(){ updateRecords(records, index+1, certificate, user, cb); }
+                );
+            }
+        });
+    }
+}
 
 /* DELETE certificate elimination. */
 router.delete('/:token/:certificate', function (req, res, next) {
