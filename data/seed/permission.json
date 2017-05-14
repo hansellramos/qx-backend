@@ -31,3 +31,5 @@
 {"_id":{"$oid":"57a2335ada45a6d40bc2ce18"},"name":"Record Deletion","reference":"recordDelete","description":"Permite eliminar muestras en el sistema","type":"module"}
 {"_id":{"$oid":"57a2335ada45a6d40bc2ce1c"},"name":"Users reset password","reference":"userResetPassword","description":"Permite reiniciar la clave de los usuarios en el sistema","type":"property"}
 {"_id":{"$oid":"5914c19b2e41372f62353cac"},"name":"Record Update Quantity","reference":"recordEditQuantity","description":"Permite modificar la cantidad existente de un lote","type":"property"}
+{"_id":{"$oid":"5918a61d0fa69301e1bb70b1"},"name":"Record Update active","reference":"recordEditActive","description":"Permite modificar si un lote se encuentra activo o no para ser usado en certificados","type":"property"}
+{"_id":{"$oid":"5918ac3b0fa69301e1bb70b2"},"name":"Record Update Satisfies","reference":"recordEditSatisfies","description":"Permite modificar si un lote está apto o no para ser usado en certificados","type":"property"}
