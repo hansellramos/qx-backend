@@ -1,6 +1,6 @@
 module.exports = {
     'secret': 'a677338a7b0e1e214c76f846daa4bab2875250ff',
-    'database': 'mongodb://localhost:27017/qx',
+    'database': 'mongodb://<USERNAME>:<PASSWORD>@<HOST>/<DATABASE>?<OPTIONS>',
     'sessionTimelife': 30 * 60 * 1000,
     messages: {
         general:{
