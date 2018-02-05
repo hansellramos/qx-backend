@@ -18,7 +18,7 @@ exports.all = function (from, cb) {
                     , id: 1
                     , quantity: 1
                     , presentation: 1
-                    , max_dose: 1, due_date:1, elaboration_date:1
+                    , max_dose: 1, due_date:1, due_label:1, elaboration_date:1
                     , verification: 1
                     , leader:1, active: 1
                     , remission: 1
@@ -50,7 +50,7 @@ exports.one = function (objectId, cb) {
                 $project: {
                     id: 1,remission: 1,
                     quantity: 1,presentation: 1,date: 1,
-                    active: 1, verification: 1, certification_nsf:1, max_dose: 1, due_date:1, elaboration_date:1
+                    active: 1, verification: 1, certification_nsf:1, max_dose: 1, due_date:1, due_label:1, elaboration_date:1
                     , leader:1, clause: 1,
                     subsidiary: { _id: 1, id: 1, name: 1, reference: 1, leader: 1
                     },
@@ -82,7 +82,7 @@ exports.oneById = function (id, cb) {
                 $project: {
                     id: 1,remission: 1,
                     quantity: 1,presentation: 1,date: 1,
-                    active: 1, verification: 1, max_dose: 1, due_date:1, elaboration_date:1
+                    active: 1, verification: 1, max_dose: 1, due_date:1, due_label:1, elaboration_date:1
                     , leader:1, clause: 1,
                     product: { _id: 1, id: 1, name: 1, reference: 1 },
                     customer: { _id: 1, id: 1, name: 1 },
@@ -99,7 +99,6 @@ exports.oneById = function (id, cb) {
 }
 
 exports.validate = function (id, verification, cb) {
-    console.log([id, verification]);
     db.get()
         .collection('certificate').aggregate([
         { $match: { id: parseInt(id), verification: verification } }
@@ -113,7 +112,7 @@ exports.validate = function (id, verification, cb) {
             $project: {
                 id: 1,remission: 1,
                 quantity: 1,presentation: 1,date: 1,
-                active: 1, verification: 1, max_dose: 1, due_date:1, elaboration_date:1
+                active: 1, verification: 1, max_dose: 1, due_date:1, due_label:1, elaboration_date:1
                 , leader:1, clause: 1,
                 product: { _id: 1, id: 1, name: 1, reference: 1 },
                 customer: { _id: 1, id: 1, name: 1 },
@@ -164,6 +163,7 @@ exports.add = function (data, user, cb) {
                 , leader: data.leader
                 , clause: data.clause
                 , due_date: data.due_date
+                , due_label: data.due_label
                 , max_dose: data.max_dose
                 , certification_nsf: data.certification_nsf
                 , active: data.active
