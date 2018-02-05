@@ -11,7 +11,7 @@ exports.all = function (cb) {
                 $project: {
                     _id: 1, id:1
                     , name: 1, reference: 1
-                    , max_dose:1, due_date:1, certification_nsf:1
+                    , max_dose:1, due_date:1, due_label:1, certification_nsf:1
                     , active: 1
                     , store: { _id: 1, name: 1, reference: 1 }
                     , properties: { name: 1, id: 1 }
@@ -36,7 +36,7 @@ exports.one = function (objectId, cb) {
                 $project: {
                     _id: 1, id:1
                     , name: 1, reference: 1, notes:1
-                    , max_dose:1, due_date:1, certification_nsf:1
+                    , max_dose:1, due_date:1, due_label:1, certification_nsf:1
                     , active: 1
                     , store: { _id: 1, id:1, name: 1, reference: 1, subsidiary:1 }
                     , properties: { name: 1, id: 1, validation:1, active:1, deleted:1 }
@@ -63,7 +63,7 @@ exports.oneById = function (id, cb) {
                 $project: {
                     _id: 1, id:1
                     , name: 1, reference: 1, notes:1
-                    , max_dose:1, due_date:1, certification_nsf:1
+                    , max_dose:1, due_date:1, due_label:1, certification_nsf:1
                     , active: 1
                     , store: { _id: 1, id:1, name: 1, reference: 1, subsidiary:1 }
                     , properties: { name: 1, id: 1, validation:1, active:1 }
@@ -117,6 +117,7 @@ exports.add = function (data, user, cb) {
                     , reference: data.reference
                     , max_dose: data.max_dose
                     , due_date: data.due_date
+                    , due_label: data.due_label
                     , certification_nsf: data.certification_nsf
                     , properties: data.properties
                     , active: data.active

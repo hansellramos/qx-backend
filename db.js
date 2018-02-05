@@ -1,4 +1,5 @@
 var MongoClient = require('mongodb').MongoClient
+var config = require('./config');
 
 var state = {
     db: null,
@@ -7,15 +8,15 @@ var state = {
 exports.connect = function(url, cb) {
     if (state.db) return cb()
 
-    MongoClient.connect(url, function(err, db) {
+    MongoClient.connect(url, function(err, client) {
         if (err) return cb(err)
-        state.db = db
+        state.db = client.db(config.dbName)
         cb()
     })
 }
 
 exports.get = function() {
-    return state.db
+    return state.db;
 }
 
 exports.close = function(done) {
