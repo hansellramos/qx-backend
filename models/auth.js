@@ -18,7 +18,7 @@ exports.delete = function (token, cb) {
     this.one(token, function (error, doc) {
         db.expires = (new Date()).getTime();
         db.get().collection('token')
-            .update({token: token}, doc, cb);
+            .update({token: token}, {$set: doc}, cb);
     });
 }
 
@@ -39,7 +39,7 @@ exports.refresh = function (token, cb) {
     this.one(token, function (error, doc) {
         doc.expires = (new Date()).getTime()+config.sessionTimelife;
         db.get().collection('token')
-            .update({token: token}, doc, cb);
+            .update({token: token}, {$set :doc}, cb);
     });
 }
 
