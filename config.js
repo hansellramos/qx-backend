@@ -1,7 +1,7 @@
 module.exports = {
-    'secret': 'a677338a7b0e1e214c76f846daa4bab2875250ff',
-    'database': 'mongodb://<USERNAME>:<PASSWORD>@<HOST>/<DATABASE>?<OPTIONS>',
-    'dbName': '<DATABASE>',
+    'secret': process.env.secret,
+    'database': `${process.env.dbhost}`,
+    'dbName': process.env.dbname,
     'sessionTimelife': 30 * 60 * 1000,
     messages: {
         general:{
