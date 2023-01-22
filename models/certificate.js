@@ -1,12 +1,11 @@
-var db = require('../db');
-var ObjectID = require('mongodb').ObjectID;
-var sequence_model = require('./internal/sequence');
-var crypto = require('crypto');
-var config = require('../config');
+const db = require('../db');
+const ObjectID = require('mongodb').ObjectID;
+const sequence_model = require('./internal/sequence');
+const crypto = require('crypto');
+const config = require('../config');
 
-exports.all = function (from, cb) {
-    var items = [];
-    db.get()
+exports.all = async (from) => {
+    return await db.get()
         .collection('certificate').aggregate([
             { $match: {deleted: false, id: { $gt: 0 }, created: { $gt: from} } }
             , { $lookup: { from: 'product' , localField: 'product' , foreignField: 'id' , as: 'product' } }
@@ -29,14 +28,11 @@ exports.all = function (from, cb) {
             }
             , { $sort: {_id:-1} }
             /*, { $limit : 50 }*/
-        ])
-        .toArray(function (err, docs) {
-            cb(err, docs);
-        });
+        ]).toArray();
 }
 
-exports.one = function (objectId, cb) {
-    db.get()
+exports.one = async (objectId) => {
+    const certificate = await db.get()
         .collection('certificate').aggregate([
             { $match: { _id: new ObjectID(objectId)} }
             , { $limit: 1 }
@@ -62,14 +58,12 @@ exports.one = function (objectId, cb) {
                     , deleter: { _id:1, id:1, firstname:1, lastname:1 }, deleted:1
                 }
           }
-        ])
-        .toArray(function (err, docs) {
-            cb(err, docs.length > 0 ? docs[0] : docs);
-        });
+        ]).toArray();
+    return certificate.length > 0 ? certificate[0] : false;
 }
 
-exports.oneById = function (id, cb) {
-    db.get()
+exports.oneById = async (id) => {
+    return await db.get()
         .collection('certificate').aggregate([
             { $match: { _id:id} }
             , { $limit: 1 }
@@ -92,14 +86,11 @@ exports.oneById = function (id, cb) {
                     , deleter: { _id:1, id:1, firstname:1, lastname:1 }, deleted:1
                 }
             }
-        ])
-        .toArray(function (err, docs) {
-            cb(err, docs.length > 0 ? docs[0] : docs);
-        });
+        ]).toArray();
 }
 
-exports.validate = function (id, verification, cb) {
-    db.get()
+exports.validate = async (id, verification) => {
+    const certificate = await db.get()
         .collection('certificate').aggregate([
         { $match: { id: parseInt(id), verification: verification } }
         , { $limit: 1 }
@@ -122,76 +113,62 @@ exports.validate = function (id, verification, cb) {
                 , deleter: { _id:1, id:1, firstname:1, lastname:1 }, deleted:1
             }
         }
-    ])
-        .toArray(function (err, docs) {
-            cb(err, docs.length > 0 ? docs[0] : docs);
-        });
+    ]).toArray();
+    return certificate.length > 0 ? certificate[0] : false;
 }
 
-exports.lastInsertedId = function(cb){
-    db.get()
+exports.lastInsertedId = async () => {
+    return await db.get()
         .collection('certificate')
-        .find({},{_id:1, id:1})
+        .findOne({},{_id:1, id:1})
         .sort({_id:-1})
-        .limit(1).toArray(function(error, results){
-        if(results.length>0){
-            cb(error, results[0]);
-        }else{
-            cb(error, results);
-        }
-    });
+        .limit(1);
 }
 
 // Insert new data
-exports.add = function (data, user, cb) {
-    sequence_model.getSequence('certificate', function(error, counter){
-        if(error){
-            cb(error);
-        }else{
-            var _certificate = {
-                id: counter.value.seq
-                , date: data.date
-                , subsidiary: data.subsidiary
-                , product: data.product
-                , customer: data.customer
-                , remission: data.remission
-                , quantity: data.quantity
-                , presentation: data.presentation
-                , properties: data.properties
-                , values: data.values
-                , elaboration_date: data.elaboration_date
-                , leader: data.leader
-                , clause: data.clause
-                , due_date: data.due_date
-                , due_label: data.due_label
-                , max_dose: data.max_dose
-                , certification_nsf: data.certification_nsf
-                , active: data.active
-                , creator: user
-                , created: (new Date()).getTime()
-                , modifier: user
-                , modified: (new Date()).getTime()
-                , deleter: false
-                , deleted: false
-            };
-            _certificate.verification = crypto.createHmac('sha256', config.secret).update(JSON.stringify(_certificate)).digest('hex').substring(29,35)
-            db.get()
-                .collection('certificate').insertOne(_certificate
-                , function (error, result) {
-                    cb(error, result);
-                });
-        }
-    });
+exports.add = async (data, user) => {
+    const counter = await sequence_model.getSequence('certificate');
+    if (!counter) {
+        return false;
+    }
+
+    const _certificate = {
+        id: counter.value.seq
+        , date: data.date
+        , subsidiary: data.subsidiary
+        , product: data.product
+        , customer: data.customer
+        , remission: data.remission
+        , quantity: data.quantity
+        , presentation: data.presentation
+        , properties: data.properties
+        , values: data.values
+        , elaboration_date: data.elaboration_date
+        , leader: data.leader
+        , clause: data.clause
+        , due_date: data.due_date
+        , due_label: data.due_label
+        , max_dose: data.max_dose
+        , certification_nsf: data.certification_nsf
+        , active: data.active
+        , creator: user
+        , created: (new Date()).getTime()
+        , modifier: user
+        , modified: (new Date()).getTime()
+        , deleter: false
+        , deleted: false
+    };
+    _certificate.verification = crypto.createHmac('sha256', config.secret).update(JSON.stringify(_certificate)).digest('hex').substring(29,35)
+
+    return await db.get()
+        .collection('certificate').insertOne(_certificate);
 }
 
 //delete data
-exports.delete = function (objectId, user, cb) {
-    db.get()
+exports.delete = async (objectId, user) => {
+    return await db.get()
         .collection('certificate').findOneAndUpdate(
         { _id: new ObjectID(objectId) },
         { $set: { deleted: (new Date()).getTime(), deleter: user } }
-        , function(error, result){
-            cb(error, result);
-        }
-    );
+        );
 }

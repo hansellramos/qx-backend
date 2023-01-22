@@ -1,292 +1,129 @@
-var express = require('express');
-var store_model = require('../models/store');
-var auth_model = require('../models/auth');
-var config = require('../config');
-var common = require('../common');
-var log = require('../models/internal/log');
-var router = express.Router();
+const express = require('express');
+const store_model = require('../models/store');
+const config = require('../config');
+const common = require('../common');
+const log = require('../models/internal/log');
+const router = express.Router();
+const auth = require('../middleware/auth');
+const {errorGeneral, errorMalformedParameters, errorObjectNotFound, successGeneral, errorInvalidParameter,
+    successCreation
+} = require('../helpers/responsesHelper');
 
 /* GET stores listing. */
-router.get('/:token', function (req, res, next) {
-    auth_model.verify(req.params.token, function(valid){
-        if(valid){
-            auth_model.refresh(req.params.token, function(){
-                store_model.all(function(error, result){
-                    if(error){
-                        res.status(503).json({
-                            success:false,
-                            message:config.messages.general.error_500,
-                            data:{}
-                        });
-                    }
-                    else {
-                        res.json(result);
-                    }
-                });
-            });
-        }else{
-            res.status(404).json({
-                success:false,
-                message:config.messages.auth.nonExistentToken,
-                data:{}
-            });
-        }
-    });
-
+router.get('/:token', auth, async (req, res) => {
+    const stores = await store_model.all();
+    if (stores) {
+        return res.json(stores);
+    }
+    return errorGeneral(res);
 });
 
 /* Get one store */
-router.get('/:token/:store', function (req, res, next) {
-    var storeParamValidation = common.validateObjectId(req.params.store);
+router.get('/:token/:store', auth, async (req, res) => {
+    const storeParamValidation = common.validateObjectId(req.params.store);
     if(!storeParamValidation.validation){
-        res.status(417).json({
-            success:false,
-            message:config.messages.store.paramStoreInvalid+" "+storeParamValidation.message,
-            data:{}
-        });
-    }else{
-        auth_model.verify(req.params.token, function(valid){
-            if(valid){
-                auth_model.refresh(req.params.token, function(){
-                    store_model.one(req.params.store, function(error, result){
-                        if(error){
-                            res.status(503).json({
-                                success:false,
-                                message:config.messages.general.error_500,
-                                data:{}
-                            });
-                        }
-                        else {
-                            if(result==null){
-                                res.status(404).json({
-                                    success:false,
-                                    message:config.messages.store.nonExistentStore,
-                                    data:{}
-                                });
-                            }else{
-                                res.json(result);
-                            }
-                        }
-                    });
-                });
-            }else{
-                res.status(404).json({
-                    success:false,
-                    message:config.messages.auth.nonExistentToken,
-                    data:{}
-                });
-            }
-        });
+        return errorMalformedParameters(res, `${config.messages.store.paramStoreInvalid} ${storeParamValidation.message}`);
     }
+
+    const result = await store_model.one(req.params.store);
+    if (result === null) {
+        return errorGeneral(res);
+    }
+    if(result === false) {
+        return errorObjectNotFound(res, config.messages.store.nonExistentStore);
+    }
+    return res.json(result);
 });
 
 /* POST store creation. */
-router.post('/:token', function (req, res, next) {
-    auth_model.verify(req.params.token, function(valid){
-        if(valid){
-            var currentUser = valid.user;
-            auth_model.refresh(req.params.token, function(){
-                var data = req.body;
-                store_model.exists(data.reference, function(error, docs){
-                    if(error){
-                        res.status(503).json({
-                            success:false,
-                            message:config.messages.general.error_500,
-                            data:{}
-                        });
-                    }
-                    else {
-                        if(docs.length>0){ //exists, don't create new
-                            res.status(406).json({
-                                success:false,
-                                message:config.messages.store.notSaved,
-                                data:{
-                                    fields: {
-                                        reference: {
-                                            error: true,
-                                            message: config.messages.store.referenceExists,
-                                            value: data.reference
-                                        }
-                                    }
-                                }
-                            });
-                        }else{
-                            store_model.add(data, currentUser, function(error){
-                                if(error){
-                                    res.status(503).json({
-                                        success:false,
-                                        message:config.messages.general.error_500+error,
-                                        data:{}
-                                    });
-                                }else{
-                                    store_model.lastInsertedId(function(error, result){
-                                        log.save(currentUser, 'store','add', result._id, data,[], function(error){
-                                            if(error){ }else{
-                                                res.json({
-                                                    success: true,
-                                                    message: config.messages.store.addedSuccessfully,
-                                                    data:{
-                                                        result: result
-                                                    }
-                                                });
-                                            }
-                                        });
-                                    });
-                                }
-                            });
-                        }
-                    }
-                });
-            });
-        }else{
-            res.status(404).json({
-                success:false,
-                message:config.messages.auth.nonExistentToken,
-                data:{}
-            });
-        }
-    });
+router.post('/:token', auth, async (req, res) => {
+    const data = req.body;
+    // check if reference already exists
+    const existentStore = await store_model.exists(data.reference);
+    if(existentStore === null) {
+        return errorGeneral(res);
+    }
+    // if exists, don't create new
+    if(existentStore.length > 0) {
+        return errorInvalidParameter(res, config.messages.store.notSaved, {
+            fields: {
+                reference: {
+                    error: true,
+                    message: config.messages.store.referenceExists,
+                    value: data.reference
+                }
+            }
+        });
+    }
+
+    const result = await store_model.add(data, req.user.id);
+    if (result === null) {
+        return errorGeneral(res);
+    }
+    const lastInsertedId = await store_model.lastInsertedId();
+    await log.save(req.user.id, 'store','add', lastInsertedId._id, data,[]);
+    return successCreation(res, config.messages.store.addedSuccessfully, lastInsertedId);
 });
 
 /* POST store update. */
-router.put('/:token/:store', function (req, res, next) {
-    var storeParamValidation = common.validateObjectId(req.params.store);
+router.put('/:token/:store', auth, async (req, res) => {
+    const storeParamValidation = common.validateObjectId(req.params.store);
     if(!storeParamValidation.validation){
-        res.status(417).json({
-            success:false,
-            message:config.messages.store.paramStoreInvalid+" "+storeParamValidation.message,
-            data:{}
-        });
-    }else{
-        auth_model.verify(req.params.token, function (valid) {
-            if (valid) {
-                var currentUser = valid.user;
-                auth_model.refresh(req.params.token, function () {
-                    var data = req.body;
-                    //update flags
-                    data.modifier = currentUser;
-                    data.modified = (new Date()).getTime();
-                    store_model.exists(data.reference, function (error, docs) {
-                        if (error) {
-                            res.status(503).json({
-                                success: false,
-                                message: config.messages.general.error_500,
-                                data: {}
-                            });
-                        }
-                        else {
-                            if (docs.length > 0) { //exists, don't create new
-                                res.status(406).json({
-                                    success: false,
-                                    message: config.messages.store.notSaved,
-                                    data: {
-                                        fields: {
-                                            reference: {
-                                                error: true,
-                                                message: config.messages.store.referenceExists,
-                                                value: data.reference
-                                            }
-                                        }
-                                    }
-                                });
-                            } else {
-                                store_model.update(req.params.store, data, currentUser, function (error, result) {
-                                    if (error) {
-                                        res.status(503).json({
-                                            success: false,
-                                            message: config.messages.general.error_500 + error,
-                                            data: {}
-                                        });
-                                    } else {
-                                        log.save(currentUser, 'store','update', req.params.store, data, docs, function(error){
-                                            if(error){ }else{
-                                                res.json({
-                                                    success: true,
-                                                    message: config.messages.store.updatedSuccessfully,
-                                                    data: {}
-                                                });
-                                            }
-                                        });
-                                    }
-                                });
-                            }
-                        }
-                    });
-                });
-            } else {
-                res.status(404).json({
-                    success: false,
-                    message: config.messages.auth.nonExistentToken,
-                    data: {}
-                });
+        return errorMalformedParameters(res, `${config.messages.store.paramStoreInvalid} ${storeParamValidation.message}`);
+    }
+
+    const existentStore = await store_model.exists(req.params.store);
+    if(existentStore === null) {
+        return errorGeneral(res);
+    }
+    if(existentStore === false) {
+        return errorObjectNotFound(res, config.messages.store.nonExistentStore);
+    }
+
+    const exist = await store_model.exists(req.body.reference);
+    if(exist === null) {
+        return errorGeneral(res);
+    }
+    if(exist.length > 0 && exist[0]._id.toString() !== req.params.store) {
+        return errorInvalidParameter(res, config.messages.store.notSaved, {
+            fields: {
+                reference: {
+                    error: true,
+                    message: config.messages.store.referenceExists,
+                    value: req.body.reference
+                }
             }
         });
     }
+
+    const result = await store_model.update(req.params.store, req.body, req.user.id);
+    if (result === null) {
+        return errorGeneral(res);
+    }
+    await log.save(req.user.id, 'store','update', req.params.store, req.body, existentStore);
+    return successGeneral(res, config.messages.store.updatedSuccessfully);
 });
 
 /* DELETE store elimination. */
-router.delete('/:token/:store', function (req, res, next) {
-    var storeParamValidation = common.validateObjectId(req.params.store);
+router.delete('/:token/:store', auth, async (req, res) => {
+    const storeParamValidation = common.validateObjectId(req.params.store);
     if(!storeParamValidation.validation){
-        res.status(417).json({
-            success:false,
-            message:config.messages.store.paramStoreInvalid+" "+storeParamValidation.message,
-            data:{}
-        });
-    }else{
-        auth_model.verify(req.params.token, function (valid) {
-            if (valid) {
-                var currentUser = valid.user;
-                auth_model.refresh(req.params.token, function () {
-                    var data = req.body;
-                    store_model.one(req.params.store, function (error, docs) {
-                        if (error) {
-                            res.status(503).json({
-                                success: false,
-                                message: config.messages.general.error_500,
-                                data: {}
-                            });
-                        }
-                        else {
-                            if (docs.length == 0) {
-                                res.status(404).json({
-                                    success:false,
-                                    message:config.messages.store.nonExistentStore,
-                                    data:{}
-                                });
-                            } else {
-                                store_model.delete(req.params.store, currentUser, function (error) {
-                                    if (error) {
-                                        res.status(503).json({
-                                            success: false,
-                                            message: config.messages.general.error_500 + error,
-                                            data: {}
-                                        });
-                                    } else {
-                                        log.save(currentUser, 'store','delete', req.params.store, [], docs, function(error){
-                                            if(error){ }else{
-                                                res.json({
-                                                    success: true,
-                                                    message: config.messages.store.deletedSuccessfully,
-                                                    data: {}
-                                                });
-                                            }
-                                        });
-                                    }
-                                });
-                            }
-                        }
-                    });
-                });
-            } else {
-                res.status(404).json({
-                    success: false,
-                    message: config.messages.auth.nonExistentToken,
-                    data: {}
-                });
-            }
-        });
+        return errorMalformedParameters(res, `${config.messages.store.paramStoreInvalid} ${storeParamValidation.message}`);
     }
+    const doc = await store_model.one(req.params.store);
+    if (doc === null) {
+        return errorGeneral(res);
+    }
+    if(doc === false) {
+        return errorObjectNotFound(res, config.messages.store.nonExistentStore);
+    }
+
+    const result = await store_model.delete(req.params.store, req.user.id);
+    if (result === null) {
+        return errorGeneral(res);
+    }
+    await log.save(req.user.id, 'store','delete', req.params.store, [], doc);
+    return successGeneral(res, config.messages.store.deletedSuccessfully);
 });
 
 module.exports = router;

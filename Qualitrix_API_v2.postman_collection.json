@@ -1,0 +1,1006 @@
+{
+	"info": {
+		"_postman_id": "3688550e-ebe7-4589-ae13-c41e7c06d7e8",
+		"name": "Qualitrix - v2",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "471883"
+	},
+	"item": [
+		{
+			"name": "Auth",
+			"item": [
+				{
+					"name": "Login",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"var jsonData = pm.response.json();",
+									"if (jsonData.success) {",
+									"    pm.environment.set(\"token\", jsonData.data.token);",
+									"} else {",
+									"    pm.environment.set(\"token\", \"auth-failed\");",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"token\": \"login\",\n    \"username\": \"john.doe\",\n    \"password\": \"asd123..\",\n    \"_device\": \"b4cd45f5b00b326a79ea6121f9cc0db8\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{host}}/auth/login",
+							"host": [
+								"{{host}}"
+							],
+							"path": [
+								"auth",
+								"login"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Current User",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									""
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"protocolProfileBehavior": {
+						"disableBodyPruning": true
+					},
+					"request": {
+						"method": "GET",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"token\": \"login\",\n    \"username\": \"john.doe\",\n    \"password\": \"asd123..\",\n    \"_device\": \"b4cd45f5b00b326a79ea6121f9cc0db8\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{host}}/auth/{{token}}",
+							"host": [
+								"{{host}}"
+							],
+							"path": [
+								"auth",
+								"{{token}}"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Update Current User Password",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									""
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "PUT",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"old\": \"asd123..\",\n    \"new\": \"123asd..\",\n    \"repeat\": \"123asd..\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{host}}/password/{{token}}",
+							"host": [
+								"{{host}}"
+							],
+							"path": [
+								"password",
+								"{{token}}"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Logout",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"var jsonData = pm.response.json();",
+									"if (jsonData.success) {",
+									"    pm.environment.set(\"token\", jsonData.data.token);",
+									"} else {",
+									"    pm.environment.set(\"token\", \"auth-failed\");",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "DELETE",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{host}}/auth/{{token}}",
+							"host": [
+								"{{host}}"
+							],
+							"path": [
+								"auth",
+								"{{token}}"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get All Permissions",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{host}}/permissions/{{token}}",
+							"host": [
+								"{{host}}"
+							],
+							"path": [
+								"permissions",
+								"{{token}}"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Certificates",
+			"item": [
+				{
+					"name": "Get All Certificates",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{host}}/certificates/{{token}}",
+							"host": [
+								"{{host}}"
+							],
+							"path": [
+								"certificates",
+								"{{token}}"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get One Certificate",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{host}}/certificates/-/6387b0234dee4000177fd7e3",
+							"host": [
+								"{{host}}"
+							],
+							"path": [
+								"certificates",
+								"-",
+								"6387b0234dee4000177fd7e3"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Delete Certificate",
+					"request": {
+						"method": "DELETE",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{host}}/certificates/{{token}}/6387b0234dee4000177fd7e3",
+							"host": [
+								"{{host}}"
+							],
+							"path": [
+								"certificates",
+								"{{token}}",
+								"6387b0234dee4000177fd7e3"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Certificate Validation",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{host}}/certificates/validate/36191/a33117",
+							"host": [
+								"{{host}}"
+							],
+							"path": [
+								"certificates",
+								"validate",
+								"36191",
+								"a33117"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Externals (Third parties)",
+			"item": [
+				{
+					"name": "Get All Externals",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{host}}/externals/{{token}}",
+							"host": [
+								"{{host}}"
+							],
+							"path": [
+								"externals",
+								"{{token}}"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get One External",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{host}}/externals/{{token}}/57a2335ada45a6d40bc2ce6c",
+							"host": [
+								"{{host}}"
+							],
+							"path": [
+								"externals",
+								"{{token}}",
+								"57a2335ada45a6d40bc2ce6c"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Delete External",
+					"request": {
+						"method": "DELETE",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{host}}/externals/{{token}}/57a2335ada45a6d40bc2ce6c",
+							"host": [
+								"{{host}}"
+							],
+							"path": [
+								"externals",
+								"{{token}}",
+								"57a2335ada45a6d40bc2ce6c"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Products",
+			"item": [
+				{
+					"name": "Get All Products",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{host}}/products/{{token}}",
+							"host": [
+								"{{host}}"
+							],
+							"path": [
+								"products",
+								"{{token}}"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get One Product",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{host}}/products/{{token}}/57a2335ada45a6d40bc2d226",
+							"host": [
+								"{{host}}"
+							],
+							"path": [
+								"products",
+								"{{token}}",
+								"57a2335ada45a6d40bc2d226"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Delete Product",
+					"request": {
+						"method": "DELETE",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{host}}/products/{{token}}/57a2335ada45a6d40bc2d226",
+							"host": [
+								"{{host}}"
+							],
+							"path": [
+								"products",
+								"{{token}}",
+								"57a2335ada45a6d40bc2d226"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Product Update",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\"properties\":[{\"id\":\"5792ce5c9629e4f5b9fb72efb89afc6ca0c492c841254915c3abc7bf31618401\",\"name\":\"<p>Color Primario</p>\\n\",\"validation\":{\"type\":\"text\"},\"active\":true,\"deleted\":false,\"status\":\"updated\",\"$$hashKey\":\"object:157\"},{\"name\":\"<p>Aroma</p>\\n\",\"validation\":{\"type\":\"text\"},\"active\":true,\"remission_editable\":false,\"deleted\":false,\"$$hashKey\":\"object:243\",\"status\":\"added\"}]}"
+						},
+						"url": {
+							"raw": "http://{{host}}/products/dea2f4221a996d09004bb439d9b3c1e7f1bcaa6a/58fcd89436c76e2c20b414ac",
+							"protocol": "http",
+							"host": [
+								"{{host}}"
+							],
+							"path": [
+								"products",
+								"dea2f4221a996d09004bb439d9b3c1e7f1bcaa6a",
+								"58fcd89436c76e2c20b414ac"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Profiles",
+			"item": [
+				{
+					"name": "Get All Profiles",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{host}}/profiles/{{token}}",
+							"host": [
+								"{{host}}"
+							],
+							"path": [
+								"profiles",
+								"{{token}}"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get One Profile",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{host}}/profiles/{{token}}/57a2335ada45a6d40bc2ce1f",
+							"host": [
+								"{{host}}"
+							],
+							"path": [
+								"profiles",
+								"{{token}}",
+								"57a2335ada45a6d40bc2ce1f"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Delete Profile",
+					"request": {
+						"method": "DELETE",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{host}}/profiles/{{token}}/57a2335ada45a6d40bc2ce1f",
+							"host": [
+								"{{host}}"
+							],
+							"path": [
+								"profiles",
+								"{{token}}",
+								"57a2335ada45a6d40bc2ce1f"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Records",
+			"item": [
+				{
+					"name": "Get All Records by Product",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{host}}/records/{{token}}/57a2335ada45a6d40bc2d226",
+							"host": [
+								"{{host}}"
+							],
+							"path": [
+								"records",
+								"{{token}}",
+								"57a2335ada45a6d40bc2d226"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get One Record",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{host}}/records/{{token}}/57a2335ada45a6d40bc2d226/57a233cdda45a6d40bc380b6",
+							"host": [
+								"{{host}}"
+							],
+							"path": [
+								"records",
+								"{{token}}",
+								"57a2335ada45a6d40bc2d226",
+								"57a233cdda45a6d40bc380b6"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Delete Record",
+					"request": {
+						"method": "DELETE",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{host}}/records/{{token}}/57a233cdda45a6d40bc380aa",
+							"host": [
+								"{{host}}"
+							],
+							"path": [
+								"records",
+								"{{token}}",
+								"57a233cdda45a6d40bc380aa"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Record Update",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\"reference\":\"090630-3\",\"properties\":[{\"property\":1144,\"value\":\"sdb\"},{\"property\":1146,\"value\":\"qa\"}]}"
+						},
+						"url": {
+							"raw": "http://localhost:3000/records/1d5a9c464f57171bf8134b8ac6c3c1acdd3eae4d/587d91fca4eef07c24093454",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "3000",
+							"path": [
+								"records",
+								"1d5a9c464f57171bf8134b8ac6c3c1acdd3eae4d",
+								"587d91fca4eef07c24093454"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Stores",
+			"item": [
+				{
+					"name": "Get All Stores",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{host}}/stores/{{token}}",
+							"host": [
+								"{{host}}"
+							],
+							"path": [
+								"stores",
+								"{{token}}"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get One Store",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{host}}/stores/{{token}}/57a2335ada45a6d40bc2ce58",
+							"host": [
+								"{{host}}"
+							],
+							"path": [
+								"stores",
+								"{{token}}",
+								"57a2335ada45a6d40bc2ce58"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Delete Store",
+					"request": {
+						"method": "DELETE",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{host}}/stores/{{token}}/57a2335ada45a6d40bc2ce58",
+							"host": [
+								"{{host}}"
+							],
+							"path": [
+								"stores",
+								"{{token}}",
+								"57a2335ada45a6d40bc2ce58"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Subsidiaries",
+			"item": [
+				{
+					"name": "Get All Subsidiaries",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{host}}/subsidiaries/{{token}}",
+							"host": [
+								"{{host}}"
+							],
+							"path": [
+								"subsidiaries",
+								"{{token}}"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Create Subsidiary",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"name\": \"test subsidiary 2\",\n    \"reference\": \"test002\",\n    \"leader\": 2,\n    \"active\": true\n}"
+						},
+						"url": {
+							"raw": "{{host}}/subsidiaries/{{token}}",
+							"host": [
+								"{{host}}"
+							],
+							"path": [
+								"subsidiaries",
+								"{{token}}"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get One Subsidiary",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{host}}/subsidiaries/{{token}}/57a2335ada45a6d40bc2ce56",
+							"host": [
+								"{{host}}"
+							],
+							"path": [
+								"subsidiaries",
+								"{{token}}",
+								"57a2335ada45a6d40bc2ce56"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Delete Subsidiary",
+					"request": {
+						"method": "DELETE",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{host}}/subsidiaries/{{token}}/57a2335ada45a6d40bc2ce56",
+							"host": [
+								"{{host}}"
+							],
+							"path": [
+								"subsidiaries",
+								"{{token}}",
+								"57a2335ada45a6d40bc2ce56"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Users",
+			"item": [
+				{
+					"name": "Get All Users",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{host}}/users/{{token}}",
+							"host": [
+								"{{host}}"
+							],
+							"path": [
+								"users",
+								"{{token}}"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Create User",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"username\": \"usertest4\",\n    \"password\": \"asd123..\",\n    \"repeatPassword\": \"asd123..\",\n    \"profile\": 5,\n    \"firstname\": \"user\",\n    \"lastname\": \"test\",\n    \"email\": \"usertest@pqp.com.co\",\n    \"active\": true\n}"
+						},
+						"url": {
+							"raw": "{{host}}/users/{{token}}",
+							"host": [
+								"{{host}}"
+							],
+							"path": [
+								"users",
+								"{{token}}"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get One User",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{host}}/users/{{token}}/57a2335ada45a6d40bc2ce25",
+							"host": [
+								"{{host}}"
+							],
+							"path": [
+								"users",
+								"{{token}}",
+								"57a2335ada45a6d40bc2ce25"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Update User",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"firstname\": \"user1\",\n    \"lastname\": \"test1\",\n    \"username\": \"usertest\",\n    \"profile\": 3,\n    \"email\": \"usertest1@pqp.com.co\",\n    \"active\": false\n}"
+						},
+						"url": {
+							"raw": "{{host}}/users/{{token}}/63cc99d8cd86fd97ed68def7",
+							"host": [
+								"{{host}}"
+							],
+							"path": [
+								"users",
+								"{{token}}",
+								"63cc99d8cd86fd97ed68def7"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Delete User",
+					"request": {
+						"method": "DELETE",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{host}}/users/{{token}}/57a2335ada45a6d40bc2ce25",
+							"host": [
+								"{{host}}"
+							],
+							"path": [
+								"users",
+								"{{token}}",
+								"57a2335ada45a6d40bc2ce25"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		}
+	],
+	"event": [
+		{
+			"listen": "prerequest",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					""
+				]
+			}
+		},
+		{
+			"listen": "test",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					""
+				]
+			}
+		}
+	],
+	"variable": [
+		{
+			"key": "host",
+			"value": "http://localhost:8080",
+			"type": "string"
+		}
+	]
+}

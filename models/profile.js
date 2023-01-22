@@ -2,8 +2,8 @@ var db = require('../db');
 var ObjectID = require('mongodb').ObjectID;
 var sequence_model = require('./internal/sequence');
 
-exports.all = function (cb) {
-    db.get()
+exports.all = async () => {
+    return await db.get()
         .collection('profile').aggregate([
             { $match: { deleted: false, id: { $gt: 0 } } }
             , {
@@ -12,13 +12,11 @@ exports.all = function (cb) {
                     active:1
                 }
             }
-        ]).toArray(function (err, docs) {
-            cb(err, docs);
-        });
+        ]).toArray();
 }
 
-exports.one = function (objectId, cb) {
-    db.get()
+exports.one = async (objectId) => {
+    const profile = await db.get()
         .collection('profile').aggregate([
             { $match: {_id: new ObjectID(objectId)} }
             , { $limit: 1 }
@@ -34,13 +32,12 @@ exports.one = function (objectId, cb) {
                     , deleter: { _id:1, id:1, firstname:1, lastname:1 }, deleted:1
                 }
             }
-        ]).toArray(function (err, docs) {
-            cb(err, docs.length > 0 ? docs[0] : docs);
-        });
+        ]).toArray();
+    return profile.length > 0 ? profile[0] : false;
 }
 
-exports.oneById = function (id, cb) {
-    db.get()
+exports.oneById = async (id, ) => {
+    return await db.get()
         .collection('profile').aggregate([
             { $match: {id: id} }
             , { $limit: 1 }
@@ -56,56 +53,43 @@ exports.oneById = function (id, cb) {
                     , deleter: { _id:1, id:1, firstname:1, lastname:1 }, deleted:1
                 }
             }
-        ]).toArray(function (err, docs) {
-            cb(err, docs.length > 0 ? docs[0] : docs);
-        });
+        ]).toArray();
 }
 
 // Insert new data
-exports.add = function (data, user, cb) {
-    sequence_model.getSequence('profile', function(error, counter){
-        if(error){
-            cb(error);
-        }else{
-            db.get()
-                .collection('profile').insertOne({
-                    id: counter.value.seq
-                    , name: data.name
-                    , description: data.description
-                    , permissions: this.formatPermissions(data)
-                    , active: data.active
-                    , creator: user
-                    , created: (new Date()).getTime()
-                    , modifier: user
-                    , modified: (new Date()).getTime()
-                    , deleter: false
-                    , deleted: false
-                }
-                , function (error, result) {
-                    cb(error, result);
-                });
-        }
-    });
+exports.add = async (data, user) => {
+    const counter = await sequence_model.getSequence('profile');
+    if (!counter) {
+        return false;
+    }
+    return await db.get()
+        .collection('profile').insertOne({
+                id: counter.value.seq
+                , name: data.name
+                , description: data.description
+                , permissions: this.formatPermissions(data)
+                , active: data.active
+                , creator: user
+                , created: (new Date()).getTime()
+                , modifier: user
+                , modified: (new Date()).getTime()
+                , deleter: false
+                , deleted: false
+            });
 }
 
-exports.lastInsertedId = function(cb){
-    db.get()
+exports.lastInsertedId = async () => {
+    return await db.get()
         .collection('profile')
-        .find({},{_id:1})
+        .findOne({},{_id:1})
         .sort({_id:-1})
-        .limit(1).toArray(function(error, results){
-        if(results.length>0){
-            cb(error, results[0]);
-        }else{
-            cb(error, results);
-        }
-    });
+        .limit(1);
 }
 
-exports.formatPermissions = function(profile){
-    var permissions = [];
-    var _t = new Date();
-    for(var i=0;i<profile.permissions;i++){
+exports.formatPermissions = (profile) => {
+    const permissions = [];
+    const _t = new Date();
+    for(let i=0;i<profile.permissions;i++){
         permissions.push({
             permission: profile.permissions[i], date: _t.getTime()
         });
@@ -114,52 +98,43 @@ exports.formatPermissions = function(profile){
 }
 
 // Insert new data
-exports.add = function (data, user, cb) {
-    sequence_model.getSequence('profile', function(error, counter){
-        if(error){
-            cb(error);
-        }else{
-            db.get()
-                .collection('profile').insertOne({
-                    id: counter.value.seq
-                    , name: data.name
-                    , description: data.reference
-                    , permissions: data.permissions
-                    , active: data.active
-                    , creator: user
-                    , created: (new Date()).getTime()
-                    , modifier: user
-                    , modified: (new Date()).getTime()
-                    , deleter: false
-                    , deleted: false
-                }
-                , function (error, result) {
-                    cb(error, result);
-                });
-        }
-    });
+exports.add = async (data, user) => {
+    const counter = await sequence_model.getSequence('profile');
+    if (!counter) {
+        return false;
+    }
+    return await db.get()
+        .collection('profile').insertOne({
+                id: counter.value.seq
+                , name: data.name
+                , description: data.reference
+                , permissions: data.permissions
+                , active: data.active
+                , creator: user
+                , created: (new Date()).getTime()
+                , modifier: user
+                , modified: (new Date()).getTime()
+                , deleter: false
+                , deleted: false
+            });
 }
 
 // Update existent data
-exports.update = function (objectId, data, user, cb) {
-    db.get()
+exports.update = async (objectId, data, user) => {
+    data.modifier = user;
+    data.modified = (new Date()).getTime();
+    return await db.get()
         .collection('profile').findOneAndUpdate(
         { _id: new ObjectID(objectId) },
         { $set: data }
-        , function(error, result){
-            cb(error, result);
-        }
     );
 }
 
 //delete data
-exports.delete = function (objectId, user, cb) {
-    db.get()
+exports.delete = async (objectId, user) => {
+    return await db.get()
         .collection('profile').findOneAndUpdate(
         { _id: new ObjectID(objectId) },
         { $set: { deleted: (new Date()).getTime(), deleter: user } }
-        , function(error, result){
-            cb(error, result);
-        }
     );
 }

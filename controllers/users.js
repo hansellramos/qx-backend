@@ -1,292 +1,122 @@
-var express = require('express');
-var user_model = require('../models/user');
-var auth_model = require('../models/auth');
-var config = require('../config');
-var common = require('../common');
-var log = require('../models/internal/log');
-var router = express.Router();
+const express = require('express');
+const user_model = require('../models/user');
+const config = require('../config');
+const common = require('../common');
+const log = require('../models/internal/log');
+const router = express.Router();
+const auth = require('../middleware/auth');
+const {errorGeneral, errorMalformedParameters, errorObjectNotFound, successGeneral, errorAuthenticationFailed,
+  successCreation, errorInvalidParameter
+} = require('../helpers/responsesHelper');
 
 /* GET users listing. */
-router.get('/:token', function (req, res, next) {
-  auth_model.verify(req.params.token, function(valid){
-    if(valid){
-      auth_model.refresh(req.params.token, function(){
-        user_model.all(function(error, result){
-          if(error){
-            res.status(503).json({
-              success:false,
-              message:config.messages.general.error_500,
-              data:{}
-            });
-          }
-          else {
-            res.json(result);
-          }
-        });
-      });
-    }else{
-      res.status(404).json({
-        success:false,
-        message:config.messages.auth.nonExistentToken,
-        data:{}
-      });
-    }
-  });
+router.get('/:token', auth, async (req, res) => {
+  const users = await user_model.all();
+  if (users) {
+    return res.json(users);
+  }
+  return errorGeneral(res);
 });
 
 /* Get one user */
-router.get('/:token/:user', function (req, res, next) {
-  var userParamValidation = common.validateObjectId(req.params.user);
+router.get('/:token/:user', auth, async (req, res) => {
+  const userParamValidation = common.validateObjectId(req.params.user);
   if(!userParamValidation.validation){
-    res.status(417).json({
-      success:false,
-      message:config.messages.user.paramUserInvalid+" "+userParamValidation.message,
-      data:{}
-    });
-  }else{
-    auth_model.verify(req.params.token, function(valid){
-      if(valid){
-        auth_model.refresh(req.params.token, function(){
-          user_model.one(req.params.user, function(error, result){
-            if(error){
-              res.status(503).json({
-                success:false,
-                message:config.messages.general.error_500,
-                data:{}
-              });
-            }
-            else {
-              if(result==null){
-                res.status(404).json({
-                  success:false,
-                  message:config.messages.user.nonExistentUser,
-                  data:{}
-                });
-              }else{
-                res.json(result);
-              }
-            }
-          });
-        });
-      }else{
-        res.status(404).json({
-          success:false,
-          message:config.messages.auth.nonExistentToken,
-          data:{}
-        });
-      }
-    });
+    return errorMalformedParameters(res, `${config.messages.user.paramUserInvalid} ${userParamValidation.message}`);
   }
+
+  const result = await user_model.one(req.params.user);
+  if (result == null) {
+    return errorGeneral(res);
+  }
+  if(result === false){
+    return errorObjectNotFound(res, config.messages.user.nonExistentUser);
+  }
+  return res.json(result);
 });
 
 /* POST user creation. */
-router.post('/:token', function (req, res, next) {
-  auth_model.verify(req.params.token, function(valid){
-    if(valid){
-      var currentUser = valid.user;
-      auth_model.refresh(req.params.token, function(){
-        var data = req.body;
-        delete data.repeatPassword;
-        user_model.exists(data.username, function(error, docs){
-          if(error){
-            res.status(503).json({
-              success:false,
-              message:config.messages.general.error_500,
-              data:{}
-            });
-          }
-          else {
-            if(docs.length>0){ //exists, don't create new
-              res.status(406).json({
-                success:false,
-                message:config.messages.user.notSaved,
-                data:{
-                  fields: {
-                    username: {
-                      error: true,
-                      message: config.messages.user.usernameExists,
-                      value: data.username
-                    }
-                  }
-                }
-              });
-            }else{
-              user_model.add(data, currentUser, function(error){
-                if(error){
-                  res.status(503).json({
-                    success:false,
-                    message:config.messages.general.error_500+error,
-                    data:{}
-                  });
-                }else{
-                  user_model.lastInsertedId(function(error, result){
-                    log.save(currentUser, 'user','add', result._id, data,[], function(error){
-                      if(error){ }else{
-                        res.json({
-                          success: true,
-                          message: config.messages.user.addedSuccessfully,
-                          data:{
-                            result: result
-                          }
-                        });
-                      }
-                    });
-                  });
-                }
-              });
-            }
-          }
-        });
-      });
-    }else{
-      res.status(404).json({
-        success:false,
-        message:config.messages.auth.nonExistentToken,
-        data:{}
-      });
-    }
-  });
+router.post('/:token', auth, async (req, res) => {
+  const data = req.body;
+  delete data.repeatPassword;
+  const existentUser = await user_model.exists(data.username);
+  if (existentUser && existentUser.length > 0) {
+    // username already exists, don't create user
+    return errorAuthenticationFailed(res, config.messages.user.notSaved, {
+      username: config.messages.user.usernameExists
+    });
+  }
+
+  const result = await user_model.add(data, req.user.id);
+  if (result === null) {
+    return errorGeneral(res);
+  }
+  const lastInsertedId = await user_model.lastInsertedId();
+  await log.save(req.user.id, 'user','add', lastInsertedId._id, data,[]);
+  return successCreation(res, config.messages.user.addedSuccessfully, lastInsertedId);
 });
 
 /* POST user update. */
-router.put('/:token/:user', function (req, res, next) {
-  var userParamValidation = common.validateObjectId(req.params.user);
-  if(!userParamValidation.validation){
-    res.status(417).json({
-      success:false,
-      message:config.messages.user.paramUserInvalid+" "+userParamValidation.message,
-      data:{}
-    });
-  }else {
-    auth_model.verify(req.params.token, function (valid) {
-      if (valid) {
-        var currentUser = valid.user;
-        auth_model.refresh(req.params.token, function () {
-          var data = req.body;
-          //update flags
-          data.modifier = currentUser;
-          data.modified = (new Date()).getTime();
-          user_model.exists(data.username, function (error, docs) {
-            if (error) {
-              res.status(503).json({
-                success: false,
-                message: config.messages.general.error_500,
-                data: {}
-              });
-            }
-            else {
-              if (docs.length > 0) { //exists, don't create new
-                res.status(406).json({
-                  success: false,
-                  message: config.messages.user.notSaved,
-                  data: {
-                    fields: {
-                      reference: {
+router.put('/:token/:user', auth, async (req, res) => {
+    const userParamValidation = common.validateObjectId(req.params.user);
+    if(!userParamValidation.validation){
+        return errorMalformedParameters(res, `${config.messages.user.paramUserInvalid} ${userParamValidation.message}`);
+    }
+    const data = req.body;
+    const currentUser = req.user;
+
+    // if user is updating his username, check if it already exists
+    if (data.username) {
+        const existentUser = await user_model.exists(data.username);
+        if (existentUser && existentUser.length > 0 && existentUser[0]._id.toString() !== req.params.user) {
+            // username already exists, don't update user
+            return errorInvalidParameter(res, config.messages.user.notSaved, {
+                fields: {
+                    username: {
                         error: true,
-                        message: config.messages.user.referenceExists,
-                        value: data.reference
-                      }
+                        message: config.messages.user.usernameExists,
+                        value: data.username
                     }
-                  }
-                });
-              } else {
-                user_model.update(req.params.user, data, currentUser, function (error, result) {
-                  if (error) {
-                    res.status(503).json({
-                      success: false,
-                      message: config.messages.general.error_500 + error,
-                      data: {}
-                    });
-                  } else {
-                    log.save(currentUser, 'user','update', req.params.user, data, docs, function(error){
-                      if(error){ }else{
-                        res.json({
-                          success: true,
-                          message: config.messages.user.updatedSuccessfully,
-                          data: {}
-                        });
-                      }
-                    });
-                  }
-                });
-              }
-            }
-          });
-        });
-      } else {
-        res.status(404).json({
-          success: false,
-          message: config.messages.auth.nonExistentToken,
-          data: {}
-        });
-      }
-    });
-  }
+                }
+            });
+        }
+    }
+
+    const existentUser = await user_model.one(req.params.user);
+    if (existentUser == null) {
+        return errorGeneral(res);
+    }
+    if (existentUser === false) {
+        return errorObjectNotFound(res, config.messages.user.nonExistentUser);
+    }
+
+    const result = await user_model.update(req.params.user, data, currentUser);
+    if (result === null) {
+        return errorGeneral(res);
+    }
+    await log.save(currentUser, 'user','update', req.params.user, data, existentUser);
+    return successGeneral(res, config.messages.user.updatedSuccessfully);
 });
 
 /* DELETE user elimination. */
-router.delete('/:token/:user', function (req, res, next) {
-  var userParamValidation = common.validateObjectId(req.params.user);
+router.delete('/:token/:user', auth, async (req, res) => {
+  const userParamValidation = common.validateObjectId(req.params.user);
   if(!userParamValidation.validation){
-    res.status(417).json({
-      success:false,
-      message:config.messages.user.paramUserInvalid+" "+userParamValidation.message,
-      data:{}
-    });
-  }else{
-    auth_model.verify(req.params.token, function (valid) {
-      if (valid) {
-        var currentUser = valid.user;
-        auth_model.refresh(req.params.token, function () {
-          var data = req.body;
-          user_model.one(req.params.user, function (error, docs) {
-            if (error) {
-              res.status(503).json({
-                success: false,
-                message: config.messages.general.error_500,
-                data: {}
-              });
-            }
-            else {
-              if (docs.length == 0) {
-                res.status(404).json({
-                  success:false,
-                  message:config.messages.user.nonExistentUser,
-                  data:{}
-                });
-              } else {
-                user_model.delete(req.params.user, currentUser, function (error) {
-                  if (error) {
-                    res.status(503).json({
-                      success: false,
-                      message: config.messages.general.error_500 + error,
-                      data: {}
-                    });
-                  } else {
-                    log.save(currentUser, 'user','delete', req.params.user, [], docs, function(error){
-                      if(error){ }else{
-                        res.json({
-                          success: true,
-                          message: config.messages.user.deletedSuccessfully,
-                          data: {}
-                        });
-                      }
-                    });
-                  }
-                });
-              }
-            }
-          });
-        });
-      } else {
-        res.status(404).json({
-          success: false,
-          message: config.messages.auth.nonExistentToken,
-          data: {}
-        });
-      }
-    });
+      return errorMalformedParameters(res, `${config.messages.user.paramUserInvalid} ${userParamValidation.message}`);
   }
+  const doc = await user_model.one(req.params.user);
+  if (doc === null) {
+      return errorGeneral(res);
+  }
+  if (doc === false) {
+      return errorObjectNotFound(res, config.messages.user.nonExistentUser);
+  }
+  const result = await user_model.delete(req.params.user, req.user.id);
+  if (result === null) {
+    return errorGeneral(res);
+  }
+  await log.save(req.user, 'user','delete', req.params.user, [], doc);
+  return successGeneral(res, config.messages.user.deletedSuccessfully);
 });
 
 module.exports = router;

@@ -1,36 +1,16 @@
-var express = require('express');
-var permission_model = require('../models/permission');
-var auth_model = require('../models/auth');
-var config = require('../config');
-var router = express.Router();
+const express = require('express');
+const permission_model = require('../models/permission');
+const router = express.Router();
+const auth = require('../middleware/auth');
+const {errorGeneral} = require('../helpers/responsesHelper');
 
 /* GET permissions listing. */
-router.get('/:token', function (req, res, next) {
-    auth_model.verify(req.params.token, function(valid){
-        if(valid){
-            auth_model.refresh(req.params.token, function(){
-                permission_model.all(function(error, result){
-                    if(error){
-                        res.status(503).json({
-                            success:false,
-                            message:config.messages.general.error_500,
-                            data:{}
-                        });
-                    }
-                    else {
-                        res.json(result);
-                    }
-                });
-            });
-        }else{
-            res.status(404).json({
-                success:false,
-                message:config.messages.auth.nonExistentToken,
-                data:{}
-            });
-        }
-    });
-
+router.get('/:token', auth, async (req, res) => {
+    const permissions = await permission_model.all();
+    if (permissions === null) {
+        return errorGeneral(res);
+    }
+    return res.json(permissions);
 });
 
 module.exports = router;

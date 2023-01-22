@@ -1,17 +1,17 @@
-var express = require('express');
-var router = express.Router();
-var package = require('../package.json');
+const express = require('express');
+const router = express.Router();
+const package = require('../package.json');
 
 /* GET home page. */
-router.get('/', function(req, res, next) {
+router.get('/', (req, res) => {
   res.render('index', {
-      title: 'Qualitrix API'
+      title: 'Qualitrix API - PQP'
       , description:package.description
       , version:package.version
       , lastUpdateDate:package.lastUpdateDate
       , release:package.release
       , author:package.author
-      , year: 2017
+      , year: 2023
   });
 });
 

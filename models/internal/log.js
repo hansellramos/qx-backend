@@ -1,10 +1,8 @@
-var db = require('../../db');
-var ObjectID = require('mongodb').ObjectID;
-var config = require('../../config');
+const db = require('../../db');
 
-exports.save = function(user, module, action, key, newData, oldData, cb){
+exports.save = async (user, module, action, key, newData, oldData) => {
     oldData = reduce(oldData);
-    db.get()
+    return await db.get()
         .collection('log')
         .insertOne({
                 date: new Date()
@@ -14,14 +12,10 @@ exports.save = function(user, module, action, key, newData, oldData, cb){
                 , key:key
                 , newData:newData
                 , oldData:oldData
-            }
-            , function (error, result) {
-                cb(error, result);
-            }
-        )
+            });
 }
 
-function reduce(data){
+const reduce = (data) => {
     if(data.creator && data.creator.length>0){
         data.creator = data.creator[0].id
     }

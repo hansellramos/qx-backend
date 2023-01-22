@@ -1,232 +1,107 @@
-var express = require('express');
-var certificate_model = require('../models/certificate');
-var record_model = require('../models/record');
-var auth_model = require('../models/auth');
-var config = require('../config');
-var common = require('../common');
-var log = require('../models/internal/log');
-var router = express.Router();
+const express = require('express');
+const certificate_model = require('../models/certificate');
+const record_model = require('../models/record');
+const config = require('../config');
+const common = require('../common');
+const log = require('../models/internal/log');
+const router = express.Router();
+const auth = require('../middleware/auth');
+const {errorGeneral, errorMalformedParameters, errorObjectNotFound, successGeneral} = require("../helpers/responsesHelper");
 
 /* GET certificates listing. */
-router.get('/:token', function (req, res, next) {
-    auth_model.verify(req.params.token, function(valid){
-        if(valid){
-            auth_model.refresh(req.params.token, function(){
-                //if all query parameter is equal to true, retrieve all data, else only last 188 days info
-                var from = req.query.all ? 0 : new Date().getTime() - (188*24*3600*1000);
-                certificate_model.all(from, function(error, result){
-                    if(error){
-                        res.status(503).json({
-                            success:false,
-                            message:config.messages.general.error_500,
-                            data:{}
-                        });
-                    }
-                    else {
-                        res.json(result);
-                    }
-                });
-            });
-        }else{
-            res.status(404).json({
-                success:false,
-                message:config.messages.auth.nonExistentToken,
-                data:{}
-            });
-        }
-    });
+router.get('/:token', auth, async (req, res) => {
+    const from = req.query.all ? 0 : new Date().getTime() - (188*24*3600*1000);
+    const certificates = await certificate_model.all(from);
+    if (certificates == null) {
+        return errorGeneral(res);
+    }
+    return res.json(certificates);
 });
 
-/* GET one certificate. */
-router.get('/-/:certificate', function (req, res, next) {
-    setTimeout(function(){
-        certificate_model.one(req.params.certificate, function(error, result){
-            if(error){
-                res.status(503).json({
-                    success:false,
-                    message:config.messages.general.error_500,
-                    data:{}
-                });
-            }
-            else {
-                if(result==null){
-                    res.status(404).json({
-                        success:false,
-                        message:config.messages.certificate.nonExistentCertificate,
-                        data:{}
-                    });
-                }else{
-                    res.json(result);
-                }
-            }
-        });
-    }, 1000);
+/* GET one certificate. No auth required */
+router.get('/-/:certificate', async (req, res) => {
+    const certificate = await certificate_model.one(req.params.certificate);
+    if (certificate === null) {
+        return errorGeneral(res);
+    }
+    if(certificate === false){
+        return errorObjectNotFound(res, config.messages.certificate.nonExistentCertificate);
+    }
+    return res.json(certificate);
 });
 
-/* GET Validate Certificate */
-router.get('/validate/:id/:validation', function (req, res, next) {
-    setTimeout(function(){
-        certificate_model.validate(req.params.id, req.params.validation, function(error, result){
-            if(error){
-                res.status(503).json({
-                    success:false,
-                    message:config.messages.general.error_500,
-                    data:{}
-                });
-            }
-            else {
-                if(result==null || result.length === 0){
-                    res.status(404).json({
-                        success:false,
-                        message:config.messages.certificate.nonExistentCertificate,
-                        data:{}
-                    });
-                }else{
-                    res.json(result);
-                }
-            }
-        });
-    }, 1000);
+/* GET Validate Certificate. No auth required */
+router.get('/validate/:id/:validation', async (req, res) => {
+    const certificate = await certificate_model.validate(req.params.id, req.params.validation);
+    if (certificate === null) {
+        return errorGeneral(res);
+    }
+    if (certificate === false) {
+        return errorObjectNotFound(res, config.messages.certificate.nonExistentCertificate);
+    }
+    return res.json(certificate);
 });
 
 /* POST certificates creation. */
-router.post('/:token', function (req, res, next) {
-    auth_model.verify(req.params.token, function(valid){
-        if(valid){
-            var currentUser = valid.user;
-            auth_model.refresh(req.params.token, function(){
-                var data = req.body;
-                certificate_model.add(data, currentUser, function(error, result){
-                    if(error){
-                        res.status(503).json({
-                            success:false,
-                            message:config.messages.general.error_500+error,
-                            data:{}
-                        });
-                    }else{
-                        certificate_model.lastInsertedId(function(error, result){
-                            log.save(currentUser, 'certificate','add', result._id, data,[], function(error){
-                                if(error){ }else{
-                                    updateRecords(data.records, 0, result.id, currentUser, function(){
-                                        res.json({
-                                            success: true,
-                                            message: config.messages.certificate.addedSuccessfully,
-                                            data:{
-                                                result: result
-                                            }
-                                        });
-                                    });
-                                }
-                            });
-                        });
-                    }
-                });
-            });
-        }else{
-            res.status(404).json({
-                success:false,
-                message:config.messages.auth.nonExistentToken,
-                data:{}
-            });
-        }
+router.post('/:token', auth, async (req, res) => {
+    const data = req.body;
+    const result = await certificate_model.add(data, req.user.id);
+    if (result === null) {
+        return errorGeneral(res);
+    }
+    const lastInsertedId = await certificate_model.lastInsertedId();
+    await log.save(req.user.id, 'certificate','add', lastInsertedId._id, data,[]);
+    await updateRecords(data.records, 0, result.id, req.user.id, () => {
+        return successGeneral(res, config.messages.certificate.addedSuccessfully, lastInsertedId)
     });
 });
 
-function updateRecords(records, index, certificate, user, cb){
+/* Using recursion to update records */
+const updateRecords = async (records, index, certificate, user, cb) => {
     if(index >= records.length){
         cb();
     }else{
-        record_model.one(records[index]._id, function(error, record){
-            if(error){ cb(); }
-            else{
-                var c = [];
-                console.log(record);
-                if(typeof record.certificates !== 'undefined'){
-                    c = record.certificates;
-                }
-                console.log(c);
-                c.push({
-                    'id': certificate
-                    , quantity: records[index].quantity
-                });
-                console.log(c);
-                var data = {
-                    'certificates': c
-                    , 'existing_quantity': record.existing_quantity - records[index].quantity
-                };
-                record_model.update(record._id
-                    , data
-                    , user
-                    , function(){ updateRecords(records, index+1, certificate, user, cb); }
-                );
-            }
+        const record = await record_model.one(records[index]);
+        if (record === null) {
+            return cb();
+        }
+        let c = [];
+        if(typeof record.certificates !== 'undefined'){
+            c = record.certificates;
+        }
+        c.push({
+            'id': certificate
+            , quantity: records[index].quantity
         });
+        const data = {
+            'certificates': c
+            , 'existing_quantity': record.existing_quantity - records[index].quantity
+        };
+        await record_model.update(record._id, data, user);
+        await updateRecords(records, index + 1, certificate, user, cb);
     }
 }
 
 /* DELETE certificate elimination. */
-router.delete('/:token/:certificate', function (req, res, next) {
-    var certificateParamValidation = common.validateObjectId(req.params.certificate);
+router.delete('/:token/:certificate', auth, async (req, res) => {
+    const certificateParamValidation = common.validateObjectId(req.params.certificate);
     if(!certificateParamValidation.validation){
-        res.status(417).json({
-            success:false,
-            message:config.messages.certificate.paramCertificateInvalid+" "+certificateParamValidation.message,
-            data:{}
-        });
-    }else{
-        auth_model.verify(req.params.token, function (valid) {
-            if (valid) {
-                var currentUser = valid.user;
-                auth_model.refresh(req.params.token, function () {
-                    var data = req.body;
-                    certificate_model.one(req.params.certificate, function (error, docs) {
-                        if (error) {
-                            res.status(503).json({
-                                success: false,
-                                message: config.messages.general.error_500,
-                                data: {}
-                            });
-                        }
-                        else {
-                            if (docs.length == 0) {
-                                res.status(404).json({
-                                    success:false,
-                                    message:config.messages.certificate.nonExistentCertificatel,
-                                    data:{}
-                                });
-                            } else {
-                                certificate_model.delete(req.params.certificate, currentUser, function (error) {
-                                    if (error) {
-                                        res.status(503).json({
-                                            success: false,
-                                            message: config.messages.general.error_500 + error,
-                                            data: {}
-                                        });
-                                    } else {
-                                        log.save(currentUser, 'certificate','delete', req.params.certificate, [], docs, function(error){
-                                            if(error){ }else{
-                                                res.json({
-                                                    success: true,
-                                                    message: config.messages.certificate.deletedSuccessfully,
-                                                    data: {}
-                                                });
-                                            }
-                                        });
-                                    }
-                                });
-                            }
-                        }
-                    });
-                });
-            } else {
-                res.status(404).json({
-                    success: false,
-                    message: config.messages.auth.nonExistentToken,
-                    data: {}
-                });
-            }
-        });
+        return errorMalformedParameters(res, `${config.messages.certificate.paramCertificateInvalid} ${certificateParamValidation.message}`);
     }
+    const certificate = await certificate_model.one(req.params.certificate);
+    if (certificate === null) {
+        return errorGeneral(res);
+    }
+    if(certificate === false){
+        return errorObjectNotFound(res, config.messages.certificate.nonExistentCertificate);
+    }
+
+    const result = await certificate_model.delete(req.params.certificate, req.user.id);
+    if (result === null) {
+        return errorGeneral(res);
+    }
+    await log.save(req.user.id, 'certificate','delete', req.params.certificate, [], certificate);
+    return successGeneral(res, config.messages.certificate.deletedSuccessfully);
 });
 
 module.exports = router;
