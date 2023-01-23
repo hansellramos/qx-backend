@@ -61,7 +61,7 @@ const updateRecords = async (records, index, certificate, user, cb) => {
     if(index >= records.length){
         cb();
     }else{
-        const record = await record_model.one(records[index]);
+        const record = await record_model.one(records[index]._id);
         if (record === null) {
             return cb();
         }
