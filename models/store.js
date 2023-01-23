@@ -68,9 +68,11 @@ exports.oneById = async (id) => {
 //verify if exists an object with the same reference
 exports.exists = async (reference) => {
     return await db.get()
-        .collection('store').find(
-            {reference: reference, deleted:false}
-        )
+        .collection('store')
+        .find({
+            reference: reference
+            , deleted:false
+        })
         .limit(1)
         .toArray();
 }

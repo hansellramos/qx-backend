@@ -98,9 +98,11 @@ exports.oneByUsername = async (username) => {
 //verify if exists an object with the same username
 exports.exists = async (username) => {
     return await db.get()
-        .collection('user').find(
-            {username: username, deleted:false}
-        )
+        .collection('user')
+        .find({
+            username: username
+            , deleted:false
+        })
         .limit(1)
         .toArray();
 }

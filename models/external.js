@@ -65,9 +65,11 @@ exports.oneById = async (id) => {
 //verify if exists an object with the same reference
 exports.exists = async (name) =>{
     return await db.get()
-        .collection('external').find(
-        {name: name, deleted:false}
-        )
+        .collection('external')
+        .find({
+            name: name
+            , deleted:false
+        })
         .limit(1)
         .toArray();
 }
@@ -75,7 +77,7 @@ exports.exists = async (name) =>{
 exports.lastInsertedId = async () => {
     return await db.get()
         .collection('external')
-        .findOne({},{_id:1})
+        .find({},{_id:1})
         .sort({_id:-1})
         .limit(1);
 }
