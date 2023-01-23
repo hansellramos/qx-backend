@@ -120,7 +120,7 @@ exports.validate = async (id, verification) => {
 exports.lastInsertedId = async () => {
     return await db.get()
         .collection('certificate')
-        .findOne({},{_id:1, id:1})
+        .find({},{_id:1, id:1})
         .sort({_id:-1})
         .limit(1);
 }
