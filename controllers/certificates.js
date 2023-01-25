@@ -46,7 +46,7 @@ router.get('/validate/:id/:validation', async (req, res) => {
 router.post('/:token', auth, async (req, res) => {
     const data = req.body;
     const result = await certificate_model.add(data, req.user.id);
-    if (result === null) {
+    if (!result) {
         return errorGeneral(res);
     }
     const lastInsertedId = await certificate_model.lastInsertedId();

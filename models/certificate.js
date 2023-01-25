@@ -118,11 +118,13 @@ exports.validate = async (id, verification) => {
 }
 
 exports.lastInsertedId = async () => {
-    return await db.get()
+    const result = await db.get()
         .collection('certificate')
         .find({},{_id:1, id:1})
         .sort({_id:-1})
-        .limit(1);
+        .limit(1)
+        .toArray();
+    return result.length > 0 ? result[0] : false;
 }
 
 // Insert new data

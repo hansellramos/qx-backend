@@ -85,11 +85,13 @@ exports.exists = async (reference) => {
 }
 
 exports.lastInsertedId = async () => {
-    return await db.get()
+    const result = await db.get()
         .collection('product')
-        .findOne({},{_id:1})
+        .find({},{_id:1})
         .sort({_id:-1})
-        .limit(1);
+        .limit(1)
+        .toArray();
+    return result.length > 0 ? result[0] : false;
 }
 
 // Insert new data

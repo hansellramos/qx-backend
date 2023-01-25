@@ -49,7 +49,7 @@ router.get('/:token/:profile', auth, async (req, res) => {
 router.post('/:token', auth, async (req, res) => {
     const data = req.body;
     const result = await profile_model.add(data, req.user.id);
-    if (result === null) {
+    if (!result) {
         return errorGeneral(res);
     }
     const lastInsertedId = await profile_model.lastInsertedId();

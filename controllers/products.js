@@ -58,7 +58,7 @@ router.post('/:token/', auth, async (req, res) => {
     }
 
     const product = await product_model.add(data, req.user.id);
-    if (product === null) {
+    if (!product) {
         return errorGeneral(res);
     }
     const lastInsertedId = await product_model.lastInsertedId();

@@ -78,7 +78,7 @@ router.post('/:token/:product', auth, async (req, res) => {
 
     data.properties = completeProperties(data.properties, req.user.id);
     const result = await record_model.add(data, req.user.id);
-    if (result === null) {
+    if (!result) {
         return errorGeneral(res);
     }
     const lastInsertedId = await record_model.lastInsertedId();
