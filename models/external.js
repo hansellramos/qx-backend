@@ -75,11 +75,13 @@ exports.exists = async (name) =>{
 }
 
 exports.lastInsertedId = async () => {
-    return await db.get()
+    const result = await db.get()
         .collection('external')
         .find({},{_id:1})
         .sort({_id:-1})
-        .limit(1);
+        .limit(1)
+        .toArray();
+    return result.length > 0 ? result[0] : false;
 }
 
 // Insert new data

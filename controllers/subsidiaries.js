@@ -55,7 +55,7 @@ router.post('/:token', auth, async (req, res) => {
     }
 
     const result = await subsidiary_model.add(data, req.user.id);
-    if (result === null) {
+    if (!result) {
         return errorGeneral(res);
     }
     const lastInsertedId = await subsidiary_model.lastInsertedId();
