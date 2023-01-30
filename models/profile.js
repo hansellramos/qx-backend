@@ -79,11 +79,12 @@ exports.add = async (data, user) => {
 }
 
 exports.lastInsertedId = async () => {
-    return await db.get()
+    const result = await db.get()
         .collection('profile')
-        .findOne({},{_id:1})
+        .find({},{_id:1})
         .sort({_id:-1})
         .limit(1);
+    return result.length > 0 ? result[0] : false;
 }
 
 exports.formatPermissions = (profile) => {

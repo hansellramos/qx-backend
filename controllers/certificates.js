@@ -6,7 +6,7 @@ const common = require('../common');
 const log = require('../models/internal/log');
 const router = express.Router();
 const auth = require('../middleware/auth');
-const {errorGeneral, errorMalformedParameters, errorObjectNotFound, successGeneral} = require("../helpers/responsesHelper");
+const {errorGeneral, errorMalformedParameters, errorObjectNotFound, successGeneral, successCreation} = require("../helpers/responsesHelper");
 
 /* GET certificates listing. */
 router.get('/:token', auth, async (req, res) => {
@@ -52,7 +52,7 @@ router.post('/:token', auth, async (req, res) => {
     const lastInsertedId = await certificate_model.lastInsertedId();
     await log.save(req.user.id, 'certificate','add', lastInsertedId._id, data,[]);
     await updateRecords(data.records, 0, result.id, req.user.id, () => {
-        return successGeneral(res, config.messages.certificate.addedSuccessfully, lastInsertedId)
+        return successCreation(res, config.messages.certificate.addedSuccessfully, lastInsertedId)
     });
 });
 

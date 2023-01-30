@@ -60,6 +60,7 @@ router.get('/:token/:product/:record', auth, async (req, res) => {
 
 /* POST record creation. */
 router.post('/:token/:product', auth, async (req, res) => {
+    const data = req.body;
     const existentRecord = await record_model.exists(data.reference, data.product);
     if (existentRecord === null) {
         return errorGeneral(res);
