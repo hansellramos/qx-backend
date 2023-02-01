@@ -2,8 +2,8 @@ var db = require('../db');
 var ObjectID = require('mongodb').ObjectID;
 var sequence_model = require('./internal/sequence');
 
-exports.all = function (product, cb) {
-    db.get()
+exports.all = async (product) => {
+    return await db.get()
         .collection('record').aggregate([
             { $match: { product: product.id, deleted: false, id: { $gt: 0 } } }
             , { $lookup: { from: 'user', localField: 'creator', foreignField: 'id', as: 'creator' } }
@@ -23,13 +23,11 @@ exports.all = function (product, cb) {
                 }
             }
         ])
-        .toArray(function (err, docs) {
-            cb(err, docs);
-        });
+        .toArray();
 }
 
-exports.one = function (objectId, cb) {
-    db.get()
+exports.one = async (objectId) => {
+    const record = await db.get()
         .collection('record').aggregate([
             { $match: {_id: new ObjectID(objectId)} }
             , { $limit: 1 }
@@ -40,7 +38,7 @@ exports.one = function (objectId, cb) {
             , { $lookup: { from: 'user', localField: 'deleter', foreignField: 'id', as: 'deleter'} }
             ,{
                 $project: {
-                    id:1, reference:1, active: 1
+                    id:1, reference:1
                     , supplier:1, product:1, properties:1
                     , analysis_date: 1, elaboration_date: 1, due_date: 1, reception_date: 1
                     , remission: 1, certificates: 1
@@ -53,13 +51,12 @@ exports.one = function (objectId, cb) {
                     , deleter: { _id:1, id:1, firstname:1, lastname:1 }, deleted:1
                 }
             }
-        ]).toArray(function (err, docs) {
-            cb(err, docs.length > 0 ? docs[0] : docs);
-        });
+        ]).toArray();
+    return record.length > 0 ? record[0] : false;
 }
 
-exports.oneByReference = function (reference, cb) {
-    db.get()
+exports.oneByReference = async (reference) => {
+    return await db.get()
         .collection('record').aggregate([
             { $match: { reference: reference} }
             , { $limit: 1 }
@@ -70,7 +67,7 @@ exports.oneByReference = function (reference, cb) {
             , { $lookup: { from: 'user', localField: 'deleter', foreignField: 'id', as: 'deleter'} }
             ,{
                 $project: {
-                    id:1, reference:1, active: 1
+                    id:1, reference:1
                     , supplier:1, product:1, properties:1
                     , analysis_date: 1, elaboration_date: 1, due_date: 1, reception_date: 1
                     , remission: 1, certificates: 1
@@ -83,93 +80,81 @@ exports.oneByReference = function (reference, cb) {
                     , deleter: { _id:1, id:1, firstname:1, lastname:1 }, deleted:1
                 }
             }
-        ]).toArray(function (err, docs) {
-            cb(err, docs.length > 0 ? docs[0] : docs);
-        });
+        ]).toArray();
 }
 
 //verify if exists an object with the same reference
-exports.exists = function (reference, product, cb) {
-    db.get()
-        .collection('record').find(
-            { reference: reference, deleted:false, product:product }
-        ).limit(2)
-        .toArray(function (err, docs) {
-            cb(err, docs);
-        });
+exports.exists = async (reference, product) => {
+    return await db.get()
+        .collection('record')
+        .find({
+            reference: reference
+            , deleted:false
+            , product:product
+        }).limit(2)
+        .toArray();
 }
 
-exports.lastInsertedId = function(cb){
-    db.get()
+exports.lastInsertedId = async() => {
+    const result = await db.get()
         .collection('record')
         .find({},{_id:1})
         .sort({_id:-1})
-        .limit(1).toArray(function(error, results){
-        if(results.length>0){
-            cb(error, results[0]);
-        }else{
-            cb(error, results);
-        }
-    });
+        .limit(1)
+        .toArray();
+    return result.length > 0 ? result[0] : false;
 }
 
 // Insert new data
-exports.add = function (data, user, cb) {
-    sequence_model.getSequence('record', function(error, counter){
-        if(error){
-            cb(error);
-        }else{
-            db.get()
-                .collection('record').insertOne({
-                    id: counter.value.seq
-                    , product: data.product
-                    , reference: data.reference
-                    , analysis_date: data.analysis_date
-                    , elaboration_date: data.elaboration_date
-                    , due_date: data.due_date
-                    , reception_date: data.reception_date
-                    , properties: data.properties
-                    , veredict: data.veredict
-                    , remission: data.remission
-                    , quantity: data.quantity
-                    , existing_quantity: data.existing_quantity
-                    , supplier: data.supplier
-                    , satisfies: data.satisfies
-                    , notes: data.notes
-                    , active: data.active
-                    , creator: user
-                    , created: (new Date()).getTime()
-                    , modifier: user
-                    , modified: (new Date()).getTime()
-                    , deleter: false
-                    , deleted: false
-                }
-                , function (error, result) {
-                    cb(error, result);
-                });
-        }
-    });
+exports.add = async (data, user) => {
+    const counter = await sequence_model.getSequence('record');
+    if (!counter) {
+        return false;
+    }
+    return await db.get()
+        .collection('record').insertOne({
+                id: counter.value.seq
+                , product: data.product
+                , reference: data.reference
+                , analysis_date: data.analysis_date
+                , elaboration_date: data.elaboration_date
+                , due_date: data.due_date
+                , reception_date: data.reception_date
+                , properties: data.properties
+                , veredict: data.veredict
+                , remission: data.remission
+                , quantity: data.quantity
+                , existing_quantity: data.existing_quantity
+                , supplier: data.supplier
+                , satisfies: data.satisfies
+                , notes: data.notes
+                , active: data.active
+                , creator: user
+                , created: (new Date()).getTime()
+                , modifier: user
+                , modified: (new Date()).getTime()
+                , deleter: false
+                , deleted: false
+            });
 }
 
 // Update existent data
-exports.update = function (objectId, data, user, cb) {
-    db.get()
+exports.update = async (objectId, data, user) => {
+    data.modified = (new Date()).getTime();
+    data.modifier = user;
+    return await db.get()
         .collection('record').findOneAndUpdate(
         { _id: new ObjectID(objectId) }
-        , { $set: data }
-        , function(error, result){
-            cb(error, result);
-        }
-    );
+        , { $set: data });
 }
 
-exports.parsePropertiesChanges = function(newData, oldData, user){
+exports.parsePropertiesChanges = (newData, oldData, user) => {
     if(newData.properties){
-        for(var p = 0; p < newData.properties.length; p++){
-            var property = newData.properties[p];
-            for(var rp = 0; rp < oldData.properties.length; rp++){
-                var recordProperty = oldData.properties[rp];
-                if(property.property == recordProperty.property) {
+        for(let p = 0; p < newData.properties.length; p++){
+            const property = newData.properties[p];
+            for(let rp = 0; rp < oldData.properties.length; rp++){
+                const recordProperty = oldData.properties[rp];
+                if(property.property === recordProperty.property) {
                     recordProperty.value = property.value;
                     recordProperty.modified = new Date().getTime();
                     recordProperty.modifier = user;
@@ -182,13 +167,10 @@ exports.parsePropertiesChanges = function(newData, oldData, user){
 }
 
 //delete data
-exports.delete = function (objectId, user, cb) {
-    db.get()
+exports.delete = async (objectId, user) => {
+    return await db.get()
         .collection('record').findOneAndUpdate(
         { _id: new ObjectID(objectId) },
         { $set: { deleted: (new Date()).getTime(), deleter: user } }
-        , function(error, result){
-            cb(error, result);
-        }
     );
 }

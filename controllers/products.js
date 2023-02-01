@@ -1,234 +1,103 @@
-var express = require('express');
-var product_model = require('../models/product');
-var auth_model = require('../models/auth');
-var config = require('../config');
-var common = require('../common');
-var log = require('../models/internal/log');
-var crypto = require('crypto');
-var router = express.Router();
-var sha1 = require('sha1');
+const express = require('express');
+const product_model = require('../models/product');
+const config = require('../config');
+const common = require('../common');
+const log = require('../models/internal/log');
+const crypto = require('crypto');
+const router = express.Router();
+const sha1 = require('sha1');
+const auth = require('../middleware/auth');
+const { errorMalformedParameters, errorGeneral, errorObjectNotFound, successGeneral, errorInvalidParameter,
+    successCreation
+} = require('../helpers/responsesHelper');
 
 /* GET product listing. */
-router.get('/:token', function (req, res, next) {
-    auth_model.verify(req.params.token, function(valid){
-        if(valid){
-            auth_model.refresh(req.params.token, function(){
-                product_model.all(function(error, result){
-                    if(error){
-                        res.status(503).json({
-                            success:false,
-                            message:config.messages.general.error_500,
-                            data:{}
-                        });
-                    }
-                    else {
-                        res.json(result);
-                    }
-                });
-            });
-        }else{
-            res.status(404).json({
-                success:false,
-                message:config.messages.auth.nonExistentToken,
-                data:{}
-            });
-        }
-    });
-
+router.get('/:token', auth, async (req, res) => {
+    const products = await product_model.all();
+    if (products == null) {
+        return errorGeneral(res);
+    }
+    return res.json(products);
 });
 
 /* GET one product. */
-router.get('/:token/:product', function (req, res, next) {
-    var productParamValidation = common.validateObjectId(req.params.product);
+router.get('/:token/:product', auth, async (req, res) => {
+    const productParamValidation = common.validateObjectId(req.params.product);
     if(!productParamValidation.validation){
-        res.status(417).json({
-            success:false,
-            message:config.messages.product.paramProductInvalid+" "+productParamValidation.message,
-            data:{}
-        });
-    }else{
-        auth_model.verify(req.params.token, function(valid){
-            if(valid){
-                auth_model.refresh(req.params.token, function(){
-                    product_model.one(req.params.product, function(error, result){
-                        if(error){
-                            res.status(503).json({
-                                success:false,
-                                message:config.messages.general.error_500,
-                                data:{}
-                            });
-                        }
-                        else {
-                            if(result==null){
-                                res.status(404).json({
-                                    success:false,
-                                    message:config.messages.product.nonExistentProduct,
-                                    data:{}
-                                });
-                            }else{
-                                res.json(result);
-                            }
-                        }
-                    });
-                });
-            }else{
-                res.status(404).json({
-                    success:false,
-                    message:config.messages.auth.nonExistentToken,
-                    data:{}
-                });
-            }
-        });
+        return errorMalformedParameters(res, `${config.messages.product.paramProductInvalid} ${productParamValidation.message}`);
     }
+    const product = await product_model.one(req.params.product);
+    if (product === null) {
+        return errorGeneral(res);
+    }
+
+    if (product === false) {
+        return errorObjectNotFound(res, config.messages.product.nonExistentProduct);
+    }
+    return res.json(product);
 });
 
 /* POST product creation. */
-router.post('/:token/', function (req, res, next) {
-    auth_model.verify(req.params.token, function(valid){
-        if(valid){
-            var currentUser = valid.user;
-            auth_model.refresh(req.params.token, function(){
-                var data = req.body;
-                data.properties = completeProperties(data.properties, currentUser);
-                product_model.exists(data.reference, function(error, docs){
-                    if(error){
-                        res.status(503).json({
-                            success:false,
-                            message:config.messages.general.error_500,
-                            data:{}
-                        });
-                    }
-                    else {
-                        if(docs.length>0){ //exists, don't create new
-                            res.status(406).json({
-                                success:false,
-                                message:config.messages.product.notSaved,
-                                data:{
-                                    fields: {
-                                        reference: {
-                                            error: true,
-                                            message: config.messages.product.referenceExists,
-                                            value: data.reference
-                                        }
-                                    }
-                                }
-                            });
-                        }else{
-                            product_model.add(data, currentUser, function(error, result){
-                                if(error){
-                                    res.status(503).json({
-                                        success:false,
-                                        message:config.messages.general.error_500+error,
-                                        data:{}
-                                    });
-                                }else{
-                                    product_model.lastInsertedId(function(error, result){
-                                        log.save(currentUser, 'product','add', result._id, data,[], function(error){
-                                            if(error){ }else{
-                                                res.json({
-                                                    success: true,
-                                                    message: config.messages.product.addedSuccessfully,
-                                                    data:{
-                                                        result: result
-                                                    }
-                                                });
-                                            }
-                                        });
-                                    });
-                                }
-                            });
-                        }
-                    }
-                });
-            });
-        }else{
-            res.status(404).json({
-                success:false,
-                message:config.messages.auth.nonExistentToken,
-                data:{}
-            });
-        }
-    });
-});
-
-/* PUT product update. */
-router.put('/:token/:product', function (req, res, next) {
-    var productParamValidation = common.validateObjectId(req.params.product);
-    if(!productParamValidation.validation){
-        res.status(417).json({
-            success:false,
-            message:config.messages.product.paramProductInvalid+" "+productParamValidation.message,
-            data:{}
-        });
-    }else{
-        auth_model.verify(req.params.token, function (valid) {
-            if (valid) {
-                var currentUser = valid.user;
-                auth_model.refresh(req.params.token, function () {
-                    var data = req.body;
-                    //update flags
-                    data.modifier = currentUser;
-                    data.modified = (new Date()).getTime();
-                    product_model.one(req.params.product, function (error, docs) {
-                        if (error) {
-                            res.status(503).json({
-                                success: false,
-                                message: config.messages.general.error_500,
-                                data: {}
-                            });
-                        }
-                        else {
-                            if (docs.length == 0) {
-                                res.status(404).json({
-                                    success:false,
-                                    message:config.messages.product.nonExistentProduct,
-                                    data:{}
-                                });
-                            } else {
-                                //////
-                                if(data.properties){
-                                    data.properties = parseProductProperties(data.modifier, data.modified, docs.properties, data.properties);
-                                }
-                                product_model.update(req.params.product, data, currentUser, function (error, result) {
-                                    if (error) {
-                                        res.status(503).json({
-                                            success: false,
-                                            message: config.messages.general.error_500 + error,
-                                            data: {}
-                                        });
-                                    } else {
-                                        log.save(currentUser, 'product','update', req.params.product, data, docs, function(error){
-                                            if(error){ }else{
-                                                res.json({
-                                                    success: true,
-                                                    message: config.messages.product.updatedSuccessfully,
-                                                    data: {}
-                                                });
-                                            }
-                                        });
-                                    }
-                                });
-                                /////
-                            }
-                        }
-                    });
-                });
-            } else {
-                res.status(404).json({
-                    success: false,
-                    message: config.messages.auth.nonExistentToken,
-                    data: {}
-                });
+router.post('/:token/', auth, async (req, res) => {
+    const data = req.body;
+    data.properties = completeProperties(data.properties, req.user.id);
+    const existentProduct = await product_model.exists(data.reference);
+    if (existentProduct === null) {
+        return errorGeneral(res);
+    }
+    if (existentProduct.length > 0) {
+        return errorInvalidParameter(res, config.messages.product.notSaved, {
+            fields: {
+                reference: {
+                    error: true,
+                    message: config.messages.product.referenceExists,
+                    value: data.reference
+                }
             }
         });
     }
+
+    const product = await product_model.add(data, req.user.id);
+    if (!product) {
+        return errorGeneral(res);
+    }
+    const lastInsertedId = await product_model.lastInsertedId();
+    await log.save(req.user.id, 'product','add', lastInsertedId._id, data,[]);
+    return successCreation(res, config.messages.product.addedSuccessfully, lastInsertedId);
 });
 
-function parseProductProperties(modifier, modified, oldProperties, newProperties) {
-    var properties = [];
-    for(var n in newProperties){
-        var newProperty = newProperties[n];
-        var p = {
+/* PUT product update. */
+router.put('/:token/:product', auth, async (req, res) => {
+    const productParamValidation = common.validateObjectId(req.params.product);
+    if(!productParamValidation.validation){
+        return errorMalformedParameters(res, `${config.messages.product.paramProductInvalid} ${productParamValidation.message}`);
+    }
+
+    const existentProduct = await product_model.one(req.params.product);
+    if (existentProduct === null) {
+        return errorGeneral(res);
+    }
+    if (existentProduct === false) {
+        return errorObjectNotFound(res, config.messages.product.nonExistentProduct);
+    }
+
+    const data = req.body;
+    if (data.properties) {
+        data.properties = parseProductProperties(data.modifier, data.modified, docs.properties, data.properties);
+    }
+    const result = await product_model.update(req.params.product, data, req.user.id);
+    if (result === null) {
+        return errorGeneral(res);
+    }
+    await log.save(req.user.id, 'product','update', req.params.product, data, existentProduct);
+    return successGeneral(res, config.messages.product.updatedSuccessfully);
+});
+
+const parseProductProperties = (modifier, modified, oldProperties, newProperties) => {
+    const properties = [];
+    for(let n in newProperties){
+        const newProperty = newProperties[n];
+        const p = {
             id: newProperty.id ? newProperty.id : ''
             , name: newProperty.name
             , validation: newProperty.validation
@@ -239,7 +108,7 @@ function parseProductProperties(modifier, modified, oldProperties, newProperties
             p.remission_editable = newProperty.remission_editable;
         }
 
-        if(newProperty.status == 'added' || p.id === ''){
+        if(newProperty.status === 'added' || p.id === ''){
             p.id = sha1(JSON.stringify(p));
             p.created = modified;
             p.creator = modifier;
@@ -267,76 +136,32 @@ function parseProductProperties(modifier, modified, oldProperties, newProperties
 }
 
 /* DELETE product elimination. */
-router.delete('/:token/:product', function (req, res, next) {
-    var productParamValidation = common.validateObjectId(req.params.product);
+router.delete('/:token/:product', auth, async (req, res) => {
+    const productParamValidation = common.validateObjectId(req.params.product);
     if(!productParamValidation.validation){
-        res.status(417).json({
-            success:false,
-            message:config.messages.product.paramProductInvalid+" "+productParamValidation.message,
-            data:{}
-        });
-    }else{
-        auth_model.verify(req.params.token, function (valid) {
-            if (valid) {
-                var currentUser = valid.user;
-                auth_model.refresh(req.params.token, function () {
-                    var data = req.body;
-                    data.properties = completeProperties(data.properties, currentUser);
-                    product_model.one(req.params.product, function (error, docs) {
-                        if (error) {
-                            res.status(503).json({
-                                success: false,
-                                message: config.messages.general.error_500,
-                                data: {}
-                            });
-                        }
-                        else {
-                            if (docs.length == 0) {
-                                res.status(404).json({
-                                    success:false,
-                                    message:config.messages.product.nonExistentProduct,
-                                    data:{}
-                                });
-                            } else {
-                                product_model.delete(req.params.product, currentUser, function (error) {
-                                    if (error) {
-                                        res.status(503).json({
-                                            success: false,
-                                            message: config.messages.general.error_500 + error,
-                                            data: {}
-                                        });
-                                    } else {
-                                        log.save(currentUser, 'product','delete', req.params.product, [], docs, function(error){
-                                            if(error){ }else{
-                                                res.json({
-                                                    success: true,
-                                                    message: config.messages.product.deletedSuccessfully,
-                                                    data: {}
-                                                });
-                                            }
-                                        });
-                                    }
-                                });
-                            }
-                        }
-                    });
-                });
-            } else {
-                res.status(404).json({
-                    success: false,
-                    message: config.messages.auth.nonExistentToken,
-                    data: {}
-                });
-            }
-        });
+        return errorMalformedParameters(res, `${config.messages.product.paramProductInvalid} ${productParamValidation.message}`);
     }
+    const doc = await product_model.one(req.params.product);
+    if (doc === null) {
+        return errorGeneral(res);
+    }
+    if (doc === false) {
+        return errorObjectNotFound(res, config.messages.product.nonExistentProduct);
+    }
+
+    const result = await product_model.delete(req.params.product, req.user.id);
+    if (result === null) {
+        return errorGeneral(res);
+    }
+    await log.save(req.user.id, 'product', 'delete', req.params.product, {}, doc);
+    return successGeneral(res, config.messages.product.deletedSuccessfully);
 });
 
-function completeProperties(properties, user){
-    var _properties = [];
-    var _date = new Date();
-    for (var i in properties){
-        var _p = {
+const completeProperties = (properties, user) => {
+    const _properties = [];
+    const _date = new Date();
+    for (let i in properties){
+        const _p = {
             id:''
             , name: properties[i].name
             , validation: properties[i].validation

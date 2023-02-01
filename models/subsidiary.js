@@ -1,9 +1,9 @@
-var db = require('../db');
-var ObjectID = require('mongodb').ObjectID;
-var sequence_model = require('./internal/sequence');
+const db = require('../db');
+const ObjectID = require('mongodb').ObjectID;
+const sequence_model = require('./internal/sequence');
 
-exports.all = function (cb) {
-    db.get()
+exports.all = async () => {
+    return await db.get()
         .collection('subsidiary').aggregate([
             { $match: { deleted: false, id: { $gt: 0 } } }
             , { $lookup: { from: 'user', localField: 'leader', foreignField: 'id', as: 'leader'} }
@@ -15,13 +15,11 @@ exports.all = function (cb) {
                     active:1,
                 }
             }
-        ]).toArray(function (err, docs) {
-            cb(err, docs);
-        });
+        ]).toArray();
 }
 
-exports.one = function (objectId, cb) {
-    db.get()
+exports.one = async (objectId) => {
+    const doc = await db.get()
         .collection('subsidiary').aggregate([
         { $match: {_id: new ObjectID(objectId)} }
         , { $limit: 1 }
@@ -40,14 +38,12 @@ exports.one = function (objectId, cb) {
                 , deleter: { _id:1, id:1, firstname:1, lastname:1 }, deleted:1
             }
         }
-    ]).toArray(function (err, docs) {
-        //cb(err, docs);
-        cb(err, docs.length > 0 ? docs[0] : docs);
-    });
+    ]).toArray();
+    return doc.length ? doc[0] : false;
 }
 
-exports.oneById = function (id, cb) {
-    db.get()
+exports.oneById = async (id) => {
+    const doc = await db.get()
         .collection('subsidiary').aggregate([
         { $match: {id: id} }
         , { $limit: 1 }
@@ -66,83 +62,71 @@ exports.oneById = function (id, cb) {
                 , deleter: { _id:1, id:1, firstname:1, lastname:1 }, deleted:1
             }
         }
-    ]).toArray(function (err, docs) {
-        cb(err, docs.length > 0 ? docs[0] : docs);
-    });
+    ]).toArray();
+    return doc.length ? doc[0] : false;
 }
 
 //verify if exists an object with the same reference and not be deleted
-exports.exists = function (reference, cb) {
-    db.get()
-        .collection('subsidiary').find(
-            {reference: reference, deleted:false}
-        ).limit(1)
-        .toArray(function (err, docs) {
-            cb(err, docs);
-        });
+exports.exists = async (reference) => {
+    return await db.get()
+        .collection('subsidiary')
+        .find({
+            reference: reference
+            , deleted:false
+        }).limit(1)
+        .toArray();
 }
 
-exports.lastInsertedId = function(cb){
-    db.get()
+exports.lastInsertedId = async() => {
+    const result = await db.get()
         .collection('subsidiary')
         .find({},{_id:1})
         .sort({_id:-1})
-        .limit(1).toArray(function(error, results){
-            if(results.length>0){
-                cb(error, results[0]);
-            }else{
-                cb(error, results);
-            }
-        });
+        .limit(1)
+        .toArray();
+    return result.length > 0 ? result[0] : false;
 }
 
 // Insert new data
-exports.add = function (data, user, cb) {
-    sequence_model.getSequence('subsidiary', function(error, counter){
-        if(error){
-            cb(error);
-        }else{
-            db.get()
-                .collection('subsidiary').insertOne({
-                    id: counter.value.seq
-                    , name: data.name
-                    , reference: data.reference
-                    , leader: data.leader
-                    , active: data.active
-                    , creator: user
-                    , created: (new Date()).getTime()
-                    , modifier: user
-                    , modified: (new Date()).getTime()
-                    , deleter: false
-                    , deleted: false
-                }
-                , function (error, result) {
-                    cb(error, result);
-                });
-        }
+exports.add = async (data, user) => {
+    const counter = await sequence_model.getSequence('subsidiary');
+    if (!counter) {
+        return false;
+    }
+
+    return await db.get()
+        .collection('subsidiary').insertOne({
+        id: counter.value.seq
+        , name: data.name
+        , reference: data.reference
+        , leader: data.leader
+        , active: data.active
+        , creator: user
+        , created: (new Date()).getTime()
+        , modifier: user
+        , modified: (new Date()).getTime()
+        , deleter: false
+        , deleted: false
     });
 }
 
 // Update existent data
-exports.update = function (objectId, data, user, cb) {
-    db.get()
-        .collection('subsidiary').findOneAndUpdate(
+exports.update = async (objectId, data, user) => {
+    data.modified = (new Date()).getTime();
+    data.modifier = user;
+    return await db.get()
+        .collection('subsidiary')
+        .findOneAndUpdate(
         { _id: new ObjectID(objectId) },
-        { $set: data }
-        , function(error, result){
-            cb(error, result);
-        }
-    );
+        { $set: data });
 }
 
 //delete data
-exports.delete = function (objectId, user, cb) {
-    db.get()
-        .collection('subsidiary').findOneAndUpdate(
+exports.delete = async (objectId, user) => {
+    return await db.get()
+        .collection('subsidiary')
+        .findOneAndUpdate(
             { _id: new ObjectID(objectId) },
             { $set: { deleted: (new Date()).getTime(), deleter: user } }
-        , function(error, result){
-            cb(error, result);
-        }
-    );
+        );
 }

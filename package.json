@@ -1,10 +1,10 @@
 {
   "name": "qx-backend",
-  "version": "1.0.5",
-  "release": "0096",
+  "version": "2.0.3",
+  "release": "0103",
   "private": true,
   "description": "Developed for Productos Químicos Panamericanos S.A.",
-  "lastUpdateDate": "Feb 5th/2018",
+  "lastUpdateDate": "Jan 31th/2023",
   "main": "index.js",
   "scripts": {
     "start": "node ./bin/www"
@@ -20,13 +20,13 @@
   },
   "homepage": "https://github.com/hansellramos/qx-backend#readme",
   "dependencies": {
-    "body-parser": "~1.13.2",
+    "body-parser": ">1.20.0",
     "cookie-parser": "~1.3.5",
-    "debug": "~2.2.0",
+    "debug": ">=4.3.4",
     "express": "~4.13.1",
     "jade": "~1.11.0",
     "mongodb": ">=3.0",
-    "morgan": "~1.6.1",
+    "morgan": ">=1.9.1",
     "serve-favicon": "~2.3.0",
     "sha1": "^1.1.1"
   }

@@ -1,11 +1,10 @@
 var db = require('../db');
 var ObjectID = require('mongodb').ObjectID;
 var sequence_model = require('./internal/sequence');
-var sha1 = require('sha1');
 var common = require('../common');
 
-exports.all = function (cb) {
-    db.get()
+exports.all = async () => {
+    return await db.get()
         .collection('user').aggregate([
             { $match: { deleted: false, id: { $gt: 0 } } }
             , { $lookup: { from: 'profile', localField: 'profile', foreignField: 'id', as: 'profile' } }
@@ -18,13 +17,11 @@ exports.all = function (cb) {
                     profile: { _id:1, name:1 }
                 }
             }
-        ]).toArray(function (err, docs) {
-            cb(err, docs);
-        });
+        ]).toArray();
 }
 
-exports.one = function (objectId, cb) {
-    db.get()
+exports.one = async (objectId) => {
+    const user = await db.get()
         .collection('user').aggregate([
             { $match: {_id: new ObjectID(objectId)} }
             , { $limit: 1 }
@@ -44,13 +41,12 @@ exports.one = function (objectId, cb) {
                     , deleter: { _id:1, id:1, firstname:1, lastname:1 }, deleted:1
                 }
             }
-        ]).toArray(function (err, docs) {
-            cb(err, docs.length > 0 ? docs[0] : docs);
-        });
+        ]).toArray();
+    return user.length > 0 ? user[0] : false;
 }
 
-exports.oneById = function (id, cb) {
-    db.get()
+exports.oneById = async (id) => {
+    const user = await db.get()
         .collection('user').aggregate([
         { $match: {id: id} }
         , { $limit: 1 }
@@ -70,13 +66,12 @@ exports.oneById = function (id, cb) {
                 , deleter: { _id:1, id:1, firstname:1, lastname:1 }, deleted:1
             }
         }
-    ]).toArray(function (err, docs) {
-        cb(err, docs.length > 0 ? docs[0] : docs);
-    });
+    ]).toArray();
+    return user.length > 0 ? user[0] : false;
 }
 
-exports.oneByUsername = function (username, cb) {
-    db.get()
+exports.oneByUsername = async (username) => {
+    const user = await db.get()
         .collection('user').aggregate([
         { $match: {username: username} }
         , { $limit: 1 }
@@ -96,92 +91,78 @@ exports.oneByUsername = function (username, cb) {
                 , deleter: { _id:1, id:1, firstname:1, lastname:1 }, deleted:1
             }
         }
-    ]).toArray(function (err, docs) {
-        cb(err, docs.length > 0 ? docs[0] : docs);
-    });
+    ]).toArray();
+    return user.length > 0 ? user[0] : false;
 }
 
 //verify if exists an object with the same username
-exports.exists = function (username, cb) {
-    db.get()
-        .collection('user').find(
-            {username: username, deleted:false}
-        )
+exports.exists = async (username) => {
+    return await db.get()
+        .collection('user')
+        .find({
+            username: username
+            , deleted:false
+        })
         .limit(1)
-        .toArray(function (err, docs) {
-            cb(err, docs);
-        });
+        .toArray();
 }
 
-exports.lastInsertedId = function(cb){
-    db.get()
+exports.lastInsertedId = async () => {
+    const result = await db.get()
         .collection('user')
         .find({},{_id:1})
         .sort({_id:-1})
-        .limit(1).toArray(function(error, results){
-        if(results.length>0){
-            cb(error, results[0]);
-        }else{
-            cb(error, results);
-        }
-    });
+        .limit(1)
+        .toArray();
+    return result.length > 0 ? result[0] : false;
 }
 
 // Insert new data
-exports.add = function (data, user, cb) {
-    sequence_model.getSequence('user', function(error, counter){
-        if(error){
-            cb(error);
-        }else{
-            db.get()
-                .collection('user').insertOne({
-                    id: counter.value.seq
-                    , username: data.username
-                    , password: common.generatePassword(data.password, common.makeSalt())
-                    , firstname: data.firstname
-                    , lastname: data.lastname
-                    , email: data.email
-                    , profile: data.profile
-                    , active: data.active
-                    , creator: user
-                    , created: (new Date()).getTime()
-                    , modifier: user
-                    , modified: (new Date()).getTime()
-                    , deleter: false
-                    , deleted: false
-                }
-                , function (error, result) {
-                    cb(error, result);
-                });
-        }
-    });
+exports.add = async (data, user) => {
+    const counter = await sequence_model.getSequence('user');
+    if (!counter) {
+        return false;
+    }
+
+    return await db.get()
+        .collection('user').insertOne({
+            id: counter.value.seq
+            , username: data.username
+            , password: common.generatePassword(data.password, common.makeSalt())
+            , firstname: data.firstname
+            , lastname: data.lastname
+            , email: data.email
+            , profile: data.profile
+            , active: data.active
+            , creator: user
+            , created: (new Date()).getTime()
+            , modifier: user
+            , modified: (new Date()).getTime()
+            , deleter: false
+            , deleted: false
+        });
 }
 
 // Update existent data
-exports.update = function (objectId, data, user, cb) {
-    if(data.password){
+exports.update = async (objectId, data, user) => {
+    if(data.password) {
         data.password = common.generatePassword(data.password, common.makeSalt());
         data.passwordLastUpdate = (new Date()).getTime()
     }
-    console.log(data.password);
-    db.get()
+    data.modified = (new Date()).getTime();
+    data.modifier = user.id;
+    return await db.get()
         .collection('user').findOneAndUpdate(
         { _id: new ObjectID(objectId) },
         { $set: data }
-        , function(error, result){
-            cb(error, result);
-        }
     );
 }
 
 //delete data
-exports.delete = function (objectId, user, cb) {
-    db.get()
+exports.delete = async (objectId, user) => {
+    return await db.get()
         .collection('user').findOneAndUpdate(
         { _id: new ObjectID(objectId) },
         { $set: { deleted: (new Date()).getTime(), deleter: user } }
-        , function(error, result){
-            cb(error, result);
-        }
     );
 }

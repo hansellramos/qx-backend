@@ -1,50 +1,45 @@
-var db = require('../db');
-var sha1 = require('sha1');
-var config = require('../config');
+const db = require('../db');
+const sha1 = require('sha1');
+const config = require('../config');
 
-exports.insert = function (token, cb) {
-    db.get().collection('token')
-        .insert(token, cb);
+exports.insert = async (token) => {
+    return await db.get().collection('token')
+        .insert(token);
 }
 
-exports.one = function (token, cb) {
-    db.get().collection('token')
-        .findOne({token: token},{_id:0}, function(error, doc){
-            cb(error, doc);
-        });
+exports.one = async (token) => {
+    return await db.get().collection('token')
+        .findOne({token: token}, {_id:0});
 }
 
-exports.delete = function (token, cb) {
-    this.one(token, function (error, doc) {
-        db.expires = (new Date()).getTime();
-        db.get().collection('token')
-            .update({token: token}, doc, cb);
-    });
+exports.delete = async (token) => {
+    const doc = await this.one(token);
+    db.expires = (new Date()).getTime();
+    return await db.get().collection('token')
+        .update({token: token}, {$set: doc});
 }
 
-exports.verify = function (token, cb) {
-    this.one(token, function(error, doc){
-        if(error){cb(false)}
-        else{
-            if(doc){
-                cb(doc);
-            }else{
-                cb(false);
-            }
-        }
-    });
+exports.verify = async (token) => {
+    return await this.one(token);
 }
 
-exports.refresh = function (token, cb) {
-    this.one(token, function (error, doc) {
-        doc.expires = (new Date()).getTime()+config.sessionTimelife;
-        db.get().collection('token')
-            .update({token: token}, doc, cb);
-    });
+/**
+ * Query token and update expiration time
+ * @param token string
+ * @returns {Promise<boolean|*>}
+ */
+exports.refresh = async function (token) {
+    const doc = await this.one(token);
+    if (!doc) {
+        return false;
+    }
+    doc.expires = (new Date()).getTime()+config.sessionTimelife;
+    return await db.get().collection('token')
+        .update({token: token}, {$set :doc});
 }
 
-exports.authenticate = function(username, password, cb){
-    db.get()
+exports.authenticate = async (username, password) => {
+    const doc = await db.get()
         .collection('user').aggregate([
             {
                 $match:{
@@ -52,13 +47,11 @@ exports.authenticate = function(username, password, cb){
                     password:password
                 }
             }
-        ])
-        .toArray(function (err, docs) {
-            cb(err, docs.length > 0 ? docs[0] : false);
-        });
+        ]).toArray();
+    return doc.length > 0 ? doc[0] : null;
 }
 
-exports.complete = function(token){
+exports.complete = (token) => {
     if(!token.user){ return null; }
     if(!token.iat){ return null; }
     if(!token.expires){ return null; }
@@ -73,6 +66,6 @@ exports.complete = function(token){
     return token;
 }
 
-exports.generate = function(token){
+exports.generate = (token) => {
     return sha1(JSON.stringify(token)+"=="+(new Date().getTime()));
 }

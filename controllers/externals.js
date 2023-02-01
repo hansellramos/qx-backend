@@ -1,284 +1,109 @@
-var express = require('express');
-var external_model = require('../models/external');
-var auth_model = require('../models/auth');
-var config = require('../config');
-var common = require('../common');
-var log = require('../models/internal/log');
-var router = express.Router();
+const express = require('express');
+const external_model = require('../models/external');
+const config = require('../config');
+const common = require('../common');
+const log = require('../models/internal/log');
+const router = express.Router();
+const auth = require('../middleware/auth');
+const {errorGeneral, errorMalformedParameters, errorObjectNotFound, successGeneral, successCreation} = require("../helpers/responsesHelper");
 
 /* GET externals listing. */
-router.get('/:token', function (req, res, next) {
-    auth_model.verify(req.params.token, function(valid){
-        if(valid){
-            auth_model.refresh(req.params.token, function(){
-                external_model.all(function(error, result){
-                    if(error){
-                        res.status(503).json({
-                            success:false,
-                            message:config.messages.general.error_500,
-                            data:{}
-                        });
-                    }
-                    else {
-                        res.json(result);
-                    }
-                });
-            });
-        }else{
-            res.status(404).json({
-                success:false,
-                message:config.messages.auth.nonExistentToken,
-                data:{}
-            });
-        }
-    });
-
+router.get('/:token', auth, async (req, res) => {
+    const externals = await external_model.all();
+    if (externals == null) {
+        return errorGeneral(res);
+    }
+    return res.json(externals);
 });
 
 /* Get one external */
-router.get('/:token/:external', function (req, res, next) {
-    var externalParamValidation = common.validateObjectId(req.params.external);
+router.get('/:token/:external', auth, async (req, res) => {
+    const externalParamValidation = common.validateObjectId(req.params.external);
     if(!externalParamValidation.validation){
-        res.status(417).json({
-            success:false,
-            message:config.messages.external.paramExternalInvalid+" "+externalParamValidation.message,
-            data:{}
-        });
-    }else{
-        auth_model.verify(req.params.token, function(valid){
-            if(valid){
-                auth_model.refresh(req.params.token, function(){
-                    external_model.one(req.params.external, function(error, result){
-                        if(error){
-                            res.status(503).json({
-                                success:false,
-                                message:config.messages.general.error_500,
-                                data:{}
-                            });
-                        }
-                        else {
-                            if(result==null){
-                                res.status(404).json({
-                                    success:false,
-                                    message:config.messages.external.nonExistentExternal,
-                                    data:{}
-                                });
-                            }else{
-                                res.json(result);
-                            }
-                        }
-                    });
-                });
-            }else{
-                res.status(404).json({
-                    success:false,
-                    message:config.messages.auth.nonExistentToken,
-                    data:{}
-                });
-            }
-        });
+        return errorMalformedParameters(res, `${config.messages.external.paramExternalInvalid} ${externalParamValidation.message}`);
     }
+    const external = await external_model.one(req.params.external);
+    if (external === null) {
+        return errorGeneral(res);
+    }
+    if (external === false) {
+        return errorObjectNotFound(res, config.messages.external.nonExistentExternal);
+    }
+    return res.json(external);
 });
 
 /* POST external creation. */
-router.post('/:token', function (req, res, next) {
-    auth_model.verify(req.params.token, function(valid){
-        if(valid){
-            var currentUser = valid.user;
-            auth_model.refresh(req.params.token, function(){
-                var data = req.body;
-                external_model.exists(data.name, function(error, docs){
-                    if(error){
-                        res.status(503).json({
-                            success:false,
-                            message:config.messages.general.error_500,
-                            data:{}
-                        });
-                    }
-                    else {
-                        if(docs.length>0){ //exists, don't create new
-                            res.status(406).json({
-                                success:false,
-                                message:config.messages.external.notSaved,
-                                data:{
-                                    fields: {
-                                        name: {
-                                            error: true,
-                                            message: config.messages.external.nameExists,
-                                            value: data.name
-                                        }
-                                    }
-                                }
-                            });
-                        }else{
-                            external_model.add(data, currentUser, function(error){
-                                if(error){
-                                    res.status(503).json({
-                                        success:false,
-                                        message:config.messages.general.error_500+error,
-                                        data:{}
-                                    });
-                                }else{
-                                    external_model.lastInsertedId(function(error, result){
-                                        log.save(currentUser, 'external','add', result._id, data,[], function(error){
-                                            if(error){ }else{
-                                                res.json({
-                                                    success: true,
-                                                    message: config.messages.external.addedSuccessfully,
-                                                    data:{
-                                                        result: result
-                                                    }
-                                                });
-                                            }
-                                        });
-                                    });
-                                }
-                            });
-                        }
-                    }
-                });
-            });
-        }else{
-            res.status(404).json({
-                success:false,
-                message:config.messages.auth.nonExistentToken,
-                data:{}
-            });
-        }
-    });
+router.post('/:token', auth, async (req, res) => {
+    const data = req.body;
+    const existentExternal = await external_model.exists(data.name);
+    if (existentExternal === null) {
+        return errorGeneral(res);
+    }
+    if (existentExternal.length > 0) {
+        // name already exists, don't create external
+        return errorMalformedParameters(res, config.messages.external.notSaved, {
+            fields: {
+                name: {
+                    error: true,
+                    message: config.messages.external.nameExists,
+                    value: data.name
+                }
+            }
+        });
+    }
+
+    const result = await external_model.add(data, req.user.id);
+    if (!result) {
+        return errorGeneral(res);
+    }
+    const lastInsertedId = await external_model.lastInsertedId();
+    await log.save(req.user.id, 'external','add', lastInsertedId._id, data,[]);
+    return successCreation(res, config.messages.external.addedSuccessfully, lastInsertedId);
 });
 
 /* POST external update. */
-router.put('/:token/:external', function (req, res, next) {
-    var externalParamValidation = common.validateObjectId(req.params.external);
+router.put('/:token/:external', auth, async (req, res) => {
+    const externalParamValidation = common.validateObjectId(req.params.external);
     if(!externalParamValidation.validation){
-        res.status(417).json({
-            success:false,
-            message:config.messages.external.paramExternalInvalid+" "+externalParamValidation.message,
-            data:{}
-        });
-    }else{
-        auth_model.verify(req.params.token, function (valid) {
-            if (valid) {
-                var currentUser = valid.user;
-                auth_model.refresh(req.params.token, function () {
-                    var data = req.body;
-                    //update flags
-                    data.modifier = currentUser;
-                    data.modified = (new Date()).getTime();
-                    external_model.one(req.params.external, function (error, docs) {
-                        if (error) {
-                            res.status(503).json({
-                                success: false,
-                                message: config.messages.general.error_500,
-                                data: {}
-                            });
-                        }
-                        else {
-                            if (docs.length == 0) {
-                                res.status(404).json({
-                                    success:false,
-                                    message:config.messages.external.nonExistentExternal,
-                                    data:{}
-                                });
-                            } else {
-                                external_model.update(req.params.external, data, currentUser, function (error, result) {
-                                    if (error) {
-                                        res.status(503).json({
-                                            success: false,
-                                            message: config.messages.general.error_500 + error,
-                                            data: {}
-                                        });
-                                    } else {
-                                        log.save(currentUser, 'external','update', req.params.external, data, docs, function(error){
-                                            if(error){ }else{
-                                                res.json({
-                                                    success: true,
-                                                    message: config.messages.external.updatedSuccessfully,
-                                                    data: {}
-                                                });
-                                            }
-                                        });
-                                    }
-                                });
-                            }
-                        }
-                    });
-                });
-            } else {
-                res.status(404).json({
-                    success: false,
-                    message: config.messages.auth.nonExistentToken,
-                    data: {}
-                });
-            }
-        });
+        return errorMalformedParameters(res, `${config.messages.external.paramExternalInvalid} ${externalParamValidation.message}`);
     }
+
+    const existentExternal = await external_model.one(req.params.external);
+    if (existentExternal === null) {
+        return errorGeneral(res);
+    }
+    if (existentExternal === false) {
+        return errorObjectNotFound(res, config.messages.external.nonExistentExternal);
+    }
+
+    const data = req.body;
+    const result = await external_model.update(req.params.external, data, req.user.id);
+    if (result === null) {
+        return errorGeneral(res);
+    }
+    await log.save(req.user.id, 'external','update', req.params.external, data, existentExternal);
+    return successGeneral(res, config.messages.external.updatedSuccessfully);
 });
 
 /* DELETE external elimination. */
-router.delete('/:token/:external', function (req, res, next) {
-    var externalParamValidation = common.validateObjectId(req.params.external);
+router.delete('/:token/:external', auth, async (req, res) => {
+    const externalParamValidation = common.validateObjectId(req.params.external);
     if(!externalParamValidation.validation){
-        res.status(417).json({
-            success:false,
-            message:config.messages.external.paramExternalInvalid+" "+externalParamValidation.message,
-            data:{}
-        });
-    }else{
-        auth_model.verify(req.params.token, function (valid) {
-            if (valid) {
-                var currentUser = valid.user;
-                auth_model.refresh(req.params.token, function () {
-                    var data = req.body;
-                    external_model.one(req.params.external, function (error, docs) {
-                        if (error) {
-                            res.status(503).json({
-                                success: false,
-                                message: config.messages.general.error_500,
-                                data: {}
-                            });
-                        }
-                        else {
-                            if (docs.length == 0) {
-                                res.status(404).json({
-                                    success:false,
-                                    message:config.messages.external.nonExistentExternal,
-                                    data:{}
-                                });
-                            } else {
-                                external_model.delete(req.params.external, currentUser, function (error) {
-                                    if (error) {
-                                        res.status(503).json({
-                                            success: false,
-                                            message: config.messages.general.error_500 + error,
-                                            data: {}
-                                        });
-                                    } else {
-                                        log.save(currentUser, 'external','delete', req.params.external, [], docs, function(error){
-                                            if(error){ }else{
-                                                res.json({
-                                                    success: true,
-                                                    message: config.messages.external.deletedSuccessfully,
-                                                    data: {}
-                                                });
-                                            }
-                                        });
-                                    }
-                                });
-                            }
-                        }
-                    });
-                });
-            } else {
-                res.status(404).json({
-                    success: false,
-                    message: config.messages.auth.nonExistentToken,
-                    data: {}
-                });
-            }
-        });
+        return errorMalformedParameters(res, `${config.messages.external.paramExternalInvalid} ${externalParamValidation.message}`);
     }
+    const external = await external_model.one(req.params.external);
+    if (external === null) {
+        return errorGeneral(res);
+    }
+    if (external === false) {
+        return errorObjectNotFound(res, config.messages.external.nonExistentExternal);
+    }
+    const result = await external_model.delete(req.params.external, req.user.id);
+    if (result === null) {
+        return errorGeneral(res);
+    }
+    await log.save(req.user.id, 'external', 'delete', req.params.external, [], external);
+    return successGeneral(res, config.messages.external.deletedSuccessfully);
 });
 
 module.exports = router;

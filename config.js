@@ -1,7 +1,7 @@
 module.exports = {
-    'secret': 'a677338a7b0e1e214c76f846daa4bab2875250ff',
-    'database': 'mongodb://<USERNAME>:<PASSWORD>@<HOST>/<DATABASE>?<OPTIONS>',
-    'dbName': '<DATABASE>',
+    'secret': process.env.secret,
+    'database': `${process.env.dbhost}`,
+    'dbName': process.env.dbname,
     'sessionTimelife': 30 * 60 * 1000,
     messages: {
         general:{
@@ -13,7 +13,8 @@ module.exports = {
             authenticationIncomplete: 'Disculpenos, no ha sido posible finalizar el proceso de identificación, por favor intente nuevamente en unos momentos.',
             nonExistentToken: 'El token proporcionado no existe, por favor verifique e intente nuevamente.',
             expiredToken: 'La sessión ha expirado, por favor ingrese nuevamente a la aplicación.',
-            endedTokenSucessfully:'La sessión ha sido terminada exitosamente'
+            endedTokenSuccessfully:'La sessión ha sido terminada exitosamente',
+            successfulLogin:'Autenticación exitosa'
         }
         , subsidiary: {
             addedSuccessfully: 'La información ha sido guardada exitosamente.',
@@ -56,6 +57,8 @@ module.exports = {
             notSaved: 'No se ha podido completar la operación por problemas con la información, por favor verifica e intenta nuevamente.',
             deletedSuccessfully: 'La información ha sido eliminada exitosamente.',
             paramUserInvalid: 'El parámetro :user es inválido.',
+            paramsInvalid: 'Los parámetros proporcionados no son válidos.',
+            passwordsNotMatch: 'Las contraseñas no coinciden.',
             nonExistentUser: 'El usuario solicitado no existe.',
             usernameExists: 'Ya existe un usuario con el nombre de usuario proporcionado y no puede duplicarse.',
         }

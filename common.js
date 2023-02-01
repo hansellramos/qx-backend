@@ -4,7 +4,7 @@ var sha1 = require('sha1');
 
 exports.validateObjectId = function(objectId){
     try {
-        var oid = new ObjectID(objectId);
+        new ObjectID(objectId);
         return {validation:true};
     }catch(exception){
         return {validation:false, message:exception};

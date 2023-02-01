@@ -2,8 +2,8 @@ var db = require('../db');
 var ObjectID = require('mongodb').ObjectID;
 var sequence_model = require('./internal/sequence');
 
-exports.all = function (cb) {
-    db.get()
+exports.all = async () => {
+    return await db.get()
         .collection('product').aggregate([
             { $match: { deleted: false, id: { $gt: 0 } } }
             , { $lookup: { from: 'store', localField: 'store', foreignField: 'id', as: 'store' } }
@@ -18,13 +18,11 @@ exports.all = function (cb) {
                 }
             }
         ])
-        .toArray(function (err, docs) {
-            cb(err, docs);
-        });
+        .toArray();
 }
 
-exports.one = function (objectId, cb) {
-    db.get()
+exports.one = async (objectId) => {
+    const record = await db.get()
         .collection('product').aggregate([
             { $match: {_id: new ObjectID(objectId)} }
             , { $limit: 1 }
@@ -45,13 +43,12 @@ exports.one = function (objectId, cb) {
                     , deleter: { _id:1, id:1, firstname:1, lastname:1 }, deleted:1
                 }
             }
-        ]).toArray(function (err, docs) {
-            cb(err, docs.length > 0 ? docs[0] : docs);
-        });
+        ]).toArray();
+    return record.length > 0 ? record[0] : false;
 }
 
-exports.oneById = function (id, cb) {
-    db.get()
+exports.oneById = async (id) => {
+    return await db.get()
         .collection('product').aggregate([
             { $match: {id: id} }
             , { $limit: 1 }
@@ -72,89 +69,74 @@ exports.oneById = function (id, cb) {
                     , deleter: { _id:1, id:1, firstname:1, lastname:1 }, deleted:1
                 }
             }
-        ]).toArray(function (err, docs) {
-            cb(err, docs.length > 0 ? docs[0] : docs);
-        });
+        ]).toArray();
 }
 
 //verify if exists an object with the same reference
-exports.exists = function (reference, cb) {
-    db.get()
-        .collection('product').find(
-            { reference: reference, deleted:false }
-        )
+exports.exists = async (reference) => {
+    return await db.get()
+        .collection('product')
+        .find({
+            reference: reference
+            , deleted:false
+        })
         .limit(1)
-        .toArray(function (err, docs) {
-            cb(err, docs);
-        });
+        .toArray();
 }
 
-exports.lastInsertedId = function(cb){
-    db.get()
+exports.lastInsertedId = async () => {
+    const result = await db.get()
         .collection('product')
         .find({},{_id:1})
         .sort({_id:-1})
-        .limit(1).toArray(function(error, results){
-        if(results.length>0){
-            cb(error, results[0]);
-        }else{
-            cb(error, results);
-        }
-    });
+        .limit(1)
+        .toArray();
+    return result.length > 0 ? result[0] : false;
 }
 
 // Insert new data
-exports.add = function (data, user, cb) {
-    sequence_model.getSequence('product', function(error, counter){
-        if(error){
-            cb(error);
-        }else{
-            db.get()
-                .collection('product').insertOne({
-                    id: counter.value.seq
-                    , store: data.store
-                    , name: data.name
-                    , reference: data.reference
-                    , max_dose: data.max_dose
-                    , due_date: data.due_date
-                    , due_label: data.due_label
-                    , certification_nsf: data.certification_nsf
-                    , properties: data.properties
-                    , active: data.active
-                    , creator: user
-                    , created: (new Date()).getTime()
-                    , modifier: user
-                    , modified: (new Date()).getTime()
-                    , deleter: false
-                    , deleted: false
-                }
-                , function (error, result) {
-                    cb(error, result);
-                });
-        }
-    });
+exports.add = async (data, user) => {
+    const counter = await sequence_model.getSequence('product');
+    if (!counter) {
+        return false;
+    }
+    return await db.get()
+        .collection('product').insertOne({
+            id: counter.value.seq
+            , store: data.store
+            , name: data.name
+            , reference: data.reference
+            , max_dose: data.max_dose
+            , due_date: data.due_date
+            , due_label: data.due_label
+            , certification_nsf: data.certification_nsf
+            , properties: data.properties
+            , active: data.active
+            , creator: user
+            , created: (new Date()).getTime()
+            , modifier: user
+            , modified: (new Date()).getTime()
+            , deleter: false
+            , deleted: false
+        });
 }
 
 // Update existent data
-exports.update = function (objectId, data, user, cb) {
-    db.get()
+exports.update = async (objectId, data, user) => {
+    data.modified = (new Date()).getTime();
+    data.modifier = user;
+    return await db.get()
         .collection('product').findOneAndUpdate(
         { _id: new ObjectID(objectId) },
         { $set: data }
-        , function(error, result){
-            cb(error, result);
-        }
     );
 }
 
 //delete data
-exports.delete = function (objectId, user, cb) {
-    db.get()
+exports.delete = async (objectId, user) => {
+    return await db.get()
         .collection('product').findOneAndUpdate(
         { _id: new ObjectID(objectId) },
         { $set: { deleted: (new Date()).getTime(), deleter: user } }
-        , function(error, result){
-            cb(error, result);
-        }
     );
 }
