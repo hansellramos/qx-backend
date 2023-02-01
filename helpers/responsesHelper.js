@@ -57,10 +57,10 @@ exports.successGeneral = (res, message) => {
     });
 }
 
-exports.successCreation = (res, message, data) => {
+exports.successCreation = (res, message, result) => {
     return res.status(201).json({
         success: true,
         message,
-        data
+        data: { result }
     });
 }
