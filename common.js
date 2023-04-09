@@ -1,6 +1,6 @@
-var ObjectID = require('mongodb').ObjectID;
-var config = require('./config');
-var sha1 = require('sha1');
+const ObjectID = require('mongodb').ObjectId;
+const config = require('./config');
+const sha1 = require('sha1');
 
 exports.validateObjectId = function(objectId){
     try {

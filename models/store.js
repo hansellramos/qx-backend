@@ -1,6 +1,6 @@
-var db = require('../db');
-var ObjectID = require('mongodb').ObjectID;
-var sequence_model = require('./internal/sequence');
+const db = require('../db');
+const ObjectID = require('mongodb').ObjectId;
+const sequence_model = require('./internal/sequence');
 
 exports.all = async () => {
     return await db.get()

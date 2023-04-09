@@ -4,7 +4,7 @@ const config = require('../config');
 
 exports.insert = async (token) => {
     return await db.get().collection('token')
-        .insert(token);
+        .insertOne(token);
 }
 
 exports.one = async (token) => {
@@ -16,7 +16,7 @@ exports.delete = async (token) => {
     const doc = await this.one(token);
     db.expires = (new Date()).getTime();
     return await db.get().collection('token')
-        .update({token: token}, {$set: doc});
+        .updateOne({token: token}, {$set: doc});
 }
 
 exports.verify = async (token) => {
@@ -35,7 +35,7 @@ exports.refresh = async function (token) {
     }
     doc.expires = (new Date()).getTime()+config.sessionTimelife;
     return await db.get().collection('token')
-        .update({token: token}, {$set :doc});
+        .updateOne({token: token}, {$set :doc});
 }
 
 exports.authenticate = async (username, password) => {

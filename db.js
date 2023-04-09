@@ -1,30 +1,35 @@
-var MongoClient = require('mongodb').MongoClient
-var config = require('./config');
+const MongoClient = require('mongodb').MongoClient;
+const config = require('./config');
 
-var state = {
+const state = {
     db: null,
-}
+};
 
-exports.connect = function(url, cb) {
-    if (state.db) return cb()
+exports.connect = async function(url) {
+    if (state.db) return state.db;
 
-    MongoClient.connect(url, function(err, client) {
-        if (err) return cb(err)
-        state.db = client.db(config.dbName)
-        cb()
-    })
+    try {
+        const client = await MongoClient.connect(url, { useNewUrlParser: true });
+        state.db = client.db(config.dbName);
+        return state.db;
+    }
+    catch (err) {
+        throw err;
+    }
 }
 
 exports.get = function() {
     return state.db;
 }
 
-exports.close = function(done) {
+exports.close = function() {
     if (state.db) {
-        state.db.close(function(err, result) {
+        try {
+            state.db.close();
             state.db = null
             state.mode = null
-            done(err)
-        })
+        } catch (err) {
+            throw err;
+        }
     }
 }

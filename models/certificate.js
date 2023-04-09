@@ -1,5 +1,5 @@
 const db = require('../db');
-const ObjectID = require('mongodb').ObjectID;
+const ObjectID = require('mongodb').ObjectId;
 const sequence_model = require('./internal/sequence');
 const crypto = require('crypto');
 const config = require('../config');
